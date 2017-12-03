@@ -10,6 +10,7 @@
 package boring
 
 // #include "goboringcrypto.h"
+// #cgo LDFLAGS: -lcrypto
 import "C"
 import (
 	"crypto/internal/boring/sig"
