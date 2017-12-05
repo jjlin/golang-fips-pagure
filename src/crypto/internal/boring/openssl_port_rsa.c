@@ -58,3 +58,16 @@ _goboringcrypto_RSA_verify_raw(GO_RSA *rsa, size_t *out_len, uint8_t *out,
   return 1;
 }
 
+// Only in BoringSSL.
+int
+ _goboringcrypto_RSA_generate_key_fips(GO_RSA *rsa, int size, GO_BN_GENCB *cb)
+{
+  // BoringSSL's RSA_generate_key_fips hard-codes e to 65537.
+  BIGNUM *e = BN_new();
+  if (e == NULL)
+    return 0;
+  int ret = BN_set_word(e, RSA_F4)
+    && RSA_generate_key_ex(rsa, size, e, cb);
+  BN_free(e);
+  return ret;
+}
