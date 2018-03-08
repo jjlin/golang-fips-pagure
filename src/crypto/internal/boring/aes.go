@@ -14,6 +14,7 @@ import "C"
 import (
 	"crypto/cipher"
 	"errors"
+	"fmt"
 	"runtime"
 	"strconv"
 	"unsafe"
@@ -198,8 +199,8 @@ func (c *aesCipher) NewGCMTLS() (cipher.AEAD, error) {
 
 func (c *aesCipher) newGCM(nonceSize int, tls bool) (cipher.AEAD, error) {
 	if nonceSize != gcmStandardNonceSize {
-		// Fall back to standard library for GCM with non-standard nonce size.
-		return cipher.NewGCMWithNonceSize(&noGCM{c}, nonceSize)
+		// Return error for GCM with non-standard nonce size.
+		return nil, fail(fmt.Sprintf("GCM invoked with non-standard nonce size: %v", nonceSize))
 	}
 
 	var aead *C.GO_EVP_AEAD
@@ -217,8 +218,8 @@ func (c *aesCipher) newGCM(nonceSize int, tls bool) (cipher.AEAD, error) {
 			aead = C._goboringcrypto_EVP_aead_aes_256_gcm()
 		}
 	default:
-		// Fall back to standard library for GCM with non-standard key size.
-		return cipher.NewGCMWithNonceSize(&noGCM{c}, nonceSize)
+		// Return error for GCM with non-standard key size.
+		return nil, fail(fmt.Sprintf("GCM invoked with non-standard key size: %v", len(c.key)*8))
 	}
 
 	g := &aesGCM{aead: aead}
