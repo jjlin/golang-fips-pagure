@@ -17,11 +17,15 @@ import (
 	"math/big"
 )
 
-const available = true
+const (
+	available = true
+	fipsOn    = C.int(1)
+	fipsOff   = C.int(0)
+)
 
 func init() {
-	C._goboringcrypto_BORINGSSL_bcm_power_on_self_test()
-	if C._goboringcrypto_FIPS_mode() != 1 {
+	// By setting FIPS mode on, the power on self test will run.
+	if C._goboringcrypto_FIPS_mode_set(fipsOn) != fipsOn {
 		panic("boringcrypto: not in FIPS mode")
 	}
 	sig.BoringCrypto()
