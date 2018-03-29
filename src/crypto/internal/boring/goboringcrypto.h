@@ -300,31 +300,7 @@ _goboringcrypto_AES_cbc_encrypt(const uint8_t* arg0, uint8_t* arg1, size_t arg2,
 	AES_cbc_encrypt(arg0, arg1, arg2, arg3, arg4, arg5);
 }
 
-
-typedef EVP_CIPHER GO_EVP_AEAD;
 typedef ENGINE GO_ENGINE;
-const GO_EVP_AEAD* _goboringcrypto_EVP_aead_aes_128_gcm(void);
-const GO_EVP_AEAD* _goboringcrypto_EVP_aead_aes_256_gcm(void);
-enum {
-	GO_EVP_AEAD_DEFAULT_TAG_LENGTH = 0
-};
-size_t _goboringcrypto_EVP_AEAD_key_length(const GO_EVP_AEAD*);
-size_t _goboringcrypto_EVP_AEAD_nonce_length(const GO_EVP_AEAD*);
-size_t _goboringcrypto_EVP_AEAD_max_overhead(const GO_EVP_AEAD*);
-size_t _goboringcrypto_EVP_AEAD_max_tag_len(const GO_EVP_AEAD*);
-typedef EVP_CIPHER_CTX GO_EVP_AEAD_CTX;
-void _goboringcrypto_EVP_AEAD_CTX_zero(GO_EVP_AEAD_CTX*);
-int _goboringcrypto_EVP_AEAD_CTX_init(GO_EVP_AEAD_CTX*, const GO_EVP_AEAD*, const uint8_t*, size_t, size_t, GO_ENGINE*);
-void _goboringcrypto_EVP_AEAD_CTX_cleanup(GO_EVP_AEAD_CTX*);
-int _goboringcrypto_EVP_AEAD_CTX_seal(const GO_EVP_AEAD_CTX*, uint8_t*, size_t*, size_t, const uint8_t*, size_t, const uint8_t*, size_t, const uint8_t*, size_t);
-int _goboringcrypto_EVP_AEAD_CTX_open(const GO_EVP_AEAD_CTX*, uint8_t*, size_t*, size_t, const uint8_t*, size_t, const uint8_t*, size_t, const uint8_t*, size_t);
-const GO_EVP_AEAD* _goboringcrypto_EVP_aead_aes_128_gcm_tls12(void);
-const GO_EVP_AEAD* _goboringcrypto_EVP_aead_aes_256_gcm_tls12(void);
-enum go_evp_aead_direction_t {
-	go_evp_aead_open = 0,
-	go_evp_aead_seal = 1
-};
-int _goboringcrypto_EVP_AEAD_CTX_init_with_direction(GO_EVP_AEAD_CTX*, const GO_EVP_AEAD*, const uint8_t*, size_t, size_t, enum go_evp_aead_direction_t);
 
 #include <openssl/bn.h>
 
@@ -582,6 +558,19 @@ _goboringcrypto_RSA_check_key(const GO_RSA* arg0)
 
 
 #include <openssl/evp.h>
+
+int _goboringcrypto_EVP_CIPHER_CTX_seal(
+		int tls, uint8_t *out, uint8_t *nonce,
+		uint8_t *aad, size_t aad_len,
+		uint8_t *plaintext, size_t plaintext_len,
+		size_t *ciphertext_len, uint8_t *key, int key_size);
+
+int _goboringcrypto_EVP_CIPHER_CTX_open(
+		int tls, uint8_t *ciphertext, int ciphertext_len,
+		uint8_t *aad, int aad_len,
+		uint8_t *tag, unsigned char *key, int key_size,
+		uint8_t *nonce, int nonce_len,
+		uint8_t *plaintext, size_t *plaintext_len);
 
 typedef EVP_PKEY GO_EVP_PKEY;
 static inline GO_EVP_PKEY*

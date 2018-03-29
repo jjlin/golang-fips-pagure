@@ -169,8 +169,8 @@ func (c *aesCipher) NewCTR(iv []byte) cipher.Stream {
 }
 
 type aesGCM struct {
-	ctx  C.GO_EVP_AEAD_CTX
-	aead *C.GO_EVP_AEAD
+	key []byte
+	tls bool
 }
 
 const (
@@ -203,54 +203,23 @@ func (c *aesCipher) newGCM(nonceSize int, tls bool) (cipher.AEAD, error) {
 		return nil, fail(fmt.Sprintf("GCM invoked with non-standard nonce size: %v", nonceSize))
 	}
 
-	var aead *C.GO_EVP_AEAD
-	switch len(c.key) * 8 {
-	case 128:
-		if tls {
-			aead = C._goboringcrypto_EVP_aead_aes_128_gcm_tls12()
-		} else {
-			aead = C._goboringcrypto_EVP_aead_aes_128_gcm()
-		}
-	case 256:
-		if tls {
-			aead = C._goboringcrypto_EVP_aead_aes_256_gcm_tls12()
-		} else {
-			aead = C._goboringcrypto_EVP_aead_aes_256_gcm()
-		}
-	default:
+	g := &aesGCM{key: c.key, tls: tls}
+	keyLen := len(c.key) * 8
+
+	if keyLen != 128 && keyLen != 256 {
 		// Return error for GCM with non-standard key size.
 		return nil, fail(fmt.Sprintf("GCM invoked with non-standard key size: %v", len(c.key)*8))
-	}
-
-	g := &aesGCM{aead: aead}
-	if C._goboringcrypto_EVP_AEAD_CTX_init(&g.ctx, aead, (*C.uint8_t)(unsafe.Pointer(&c.key[0])), C.size_t(len(c.key)), C.GO_EVP_AEAD_DEFAULT_TAG_LENGTH, nil) == 0 {
-		return nil, fail("EVP_AEAD_CTX_init")
-	}
-	// Note: Because of the finalizer, any time g.ctx is passed to cgo,
-	// that call must be followed by a call to runtime.KeepAlive(g),
-	// to make sure g is not collected (and finalized) before the cgo
-	// call returns.
-	runtime.SetFinalizer(g, (*aesGCM).finalize)
-	if g.NonceSize() != nonceSize {
-		panic("boringcrypto: internal confusion about nonce size")
-	}
-	if g.Overhead() != gcmTagSize {
-		panic("boringcrypto: internal confusion about tag size")
 	}
 
 	return g, nil
 }
 
-func (g *aesGCM) finalize() {
-	C._goboringcrypto_EVP_AEAD_CTX_cleanup(&g.ctx)
-}
-
 func (g *aesGCM) NonceSize() int {
-	return int(C._goboringcrypto_EVP_AEAD_nonce_length(g.aead))
+	return gcmStandardNonceSize
 }
 
 func (g *aesGCM) Overhead() int {
-	return int(C._goboringcrypto_EVP_AEAD_max_overhead(g.aead))
+	return gcmTagSize
 }
 
 // base returns the address of the underlying array in b,
@@ -285,21 +254,17 @@ func (g *aesGCM) Seal(dst, nonce, plaintext, additionalData []byte) []byte {
 		panic("cipher: invalid buffer overlap")
 	}
 
-	var outLen C.size_t
-	ok := C._goboringcrypto_EVP_AEAD_CTX_seal(
-		&g.ctx,
-		(*C.uint8_t)(unsafe.Pointer(&dst[n])), &outLen, C.size_t(len(plaintext)+gcmTagSize),
-		base(nonce), C.size_t(len(nonce)),
-		base(plaintext), C.size_t(len(plaintext)),
-		base(additionalData), C.size_t(len(additionalData)))
-	runtime.KeepAlive(g)
-	if ok == 0 {
-		panic(fail("EVP_AEAD_CTX_seal"))
-	}
-	if outLen != C.size_t(len(plaintext)+gcmTagSize) {
+	var ciphertextLen C.size_t
+	C._goboringcrypto_EVP_CIPHER_CTX_seal(
+		g.tls, (*C.uint8_t)(unsafe.Pointer(&dst[n])),
+		base(nonce), base(additionalData), C.size_t(len(additionalData)),
+		base(plaintext), C.size_t(len(plaintext)), &ciphertextLen,
+		base(g.key), len(g.key)*8)
+
+	if ciphertextLen != C.size_t(len(plaintext)+gcmTagSize) {
 		panic("boringcrypto: internal confusion about GCM tag size")
 	}
-	return dst[:n+int(outLen)]
+	return dst[:n+int(ciphertextLen)]
 }
 
 var errOpen = errors.New("cipher: message authentication failed")
@@ -327,13 +292,15 @@ func (g *aesGCM) Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, er
 		panic("cipher: invalid buffer overlap")
 	}
 
+	tag := ciphertext[len(ciphertext)-gcmTagSize:]
+
 	var outLen C.size_t
-	ok := C._goboringcrypto_EVP_AEAD_CTX_open(
-		&g.ctx,
-		base(dst[n:]), &outLen, C.size_t(len(ciphertext)-gcmTagSize),
+	ok := C._goboringcrypto_EVP_CIPHER_CTX_open(
+		base(ciphertext), C.size_t(len(ciphertext)-gcmTagSize),
+		base(additionalData), C.size_t(len(additionalData)),
+		base(tag), base(g.key), len(g.key)*8,
 		base(nonce), C.size_t(len(nonce)),
-		base(ciphertext), C.size_t(len(ciphertext)),
-		base(additionalData), C.size_t(len(additionalData)))
+		base(dst[n:]), &outLen)
 	runtime.KeepAlive(g)
 	if ok == 0 {
 		return nil, errOpen
