@@ -130,7 +130,7 @@ int _goboringcrypto_EVP_CIPHER_CTX_open(
 
 	// Finalise the decryption. A positive return value indicates success,
 	// anything else is a failure - the plaintext is not trustworthy.
-	ret = _goboringcrypto_EVP_DecryptFinal_ex(ctx, plaintext + len, &len);
+	ret = EVP_DecryptFinal_ex(ctx, plaintext + len, &len);
 
 	EVP_CIPHER_CTX_free(ctx);
 

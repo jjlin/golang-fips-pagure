@@ -496,7 +496,6 @@ _goboringcrypto_ECDSA_verify(int arg0, const uint8_t* arg1, size_t arg2, const u
 
 #include <openssl/rsa.h>
 
-
 // Note: order of struct fields here is unchecked.
 typedef RSA GO_RSA;
 typedef BN_GENCB GO_BN_GENCB;
