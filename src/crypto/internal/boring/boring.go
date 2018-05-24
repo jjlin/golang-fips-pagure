@@ -28,6 +28,9 @@ func init() {
 	if C._goboringcrypto_FIPS_mode_set(fipsOn) != fipsOn {
 		panic("boringcrypto: not in FIPS mode")
 	}
+	if C._goboringcrypto_FIPS_mode() != fipsOn {
+		panic("boringcrypto: not in FIPS mode")
+	}
 	sig.BoringCrypto()
 }
 
