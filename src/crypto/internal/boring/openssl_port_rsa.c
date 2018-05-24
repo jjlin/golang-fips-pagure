@@ -48,12 +48,13 @@ _goboringcrypto_RSA_verify_raw(GO_RSA *rsa, size_t *out_len, uint8_t *out,
 				 size_t max_out,
 				 const uint8_t *in, size_t in_len, int padding)
 {
-  if (padding != GO_RSA_PKCS1_PADDING
-      || max_out < RSA_size(rsa))
+  if (max_out < RSA_size(rsa)) {
     return 0;
-  int ret = RSA_public_decrypt (in_len, in, out, rsa, RSA_NO_PADDING);
-  if (ret <= 0)
+  }
+  int ret = RSA_public_decrypt (in_len, in, out, rsa, padding);
+  if (ret <= 0) {
     return 0;
+  }
   *out_len = ret;
   return 1;
 }
@@ -75,64 +76,13 @@ int
 // Only in BoringSSL.
 int _goboringcrypto_RSA_sign_raw(GO_RSA *rsa, size_t *out_len, uint8_t *out, size_t max_out,
                  const uint8_t *in, size_t in_len, int padding) {
-  // NOTE(deparker) BoringSSL RSA interface includes the method `rsa->meth->sign_raw`. This is
-  // not implemented in OpenSSL, nor is it used in the Go caller. See {BoringSSL}/crypto/fipsmodule/rsa/rsa.c:283
-  // for an example usage.
-
-  return rsa_default_sign_raw(rsa, out_len, out, max_out, in, in_len, padding);
-}
-
-// Only in BoringSSL.
-int rsa_default_sign_raw(GO_RSA *rsa, size_t *out_len, uint8_t *out,
-                         size_t max_out, const uint8_t *in, size_t in_len,
-                         int padding) {
-	EVP_PKEY *pkey = EVP_PKEY_new();
-	EVP_PKEY_assign_RSA(pkey, rsa);
-        EVP_PKEY_CTX *ctx;
-	size_t siglen;
-	int ret;
-
-        ctx = EVP_PKEY_CTX_new(pkey, NULL /* no engine */);
-        if (!ctx) {
-		ret = 0;
-		goto err;
-	}
-        if (EVP_PKEY_sign_init(ctx) <= 0) {
-		ret = 0;
-		goto err;
-	}
-
-	switch(padding) {
-	// No padding is acceptable in this sign raw function because it is
-	// called from other functions that may have already set the padding.
-	case GO_RSA_NO_PADDING:
-	case GO_RSA_PKCS1_PADDING:
-		if (EVP_PKEY_CTX_set_rsa_padding(ctx, padding) <= 0) {
-			ret = 0;
-			goto err;
-		}
-		break;
-	default:
-		ret = 0;
-		goto err;
-	}
-
-        /* Determine buffer length */
-        if (EVP_PKEY_sign(ctx, NULL, &siglen, in, in_len) <= 0) {
-		ret = 0;
-		goto err;
-	}
-	if (max_out < siglen) {
-		ret = 0;
-		goto err;
-	}
-
-        if (EVP_PKEY_sign(ctx, out, out_len, in, in_len) <= 0)
-		ret = 0;
-
-err:
-	EVP_PKEY_CTX_free(ctx);
-	return ret;
+  if (max_out < RSA_size(rsa))
+    return 0;
+  int ret = RSA_private_encrypt (in_len, in, out, rsa, padding);
+  if (ret <= 0)
+    return 0;
+  *out_len = ret;
+  return 1;
 }
 
 int _goboringcrypto_RSA_sign_pss_mgf1(RSA *rsa, size_t *out_len, uint8_t *out, size_t max_out,

@@ -511,6 +511,18 @@ _goboringcrypto_RSA_free(GO_RSA* arg0)
 	RSA_free(arg0);
 }
 
+static inline int
+_goboringcrypto_RSA_sign(int arg0, const uint8_t* arg1, unsigned int arg2, uint8_t *arg3, unsigned int *arg4, GO_RSA* arg5)
+{
+	return RSA_sign(arg0, arg1, arg2, arg3, arg4, arg5);
+}
+
+static inline int
+_goboringcrypto_RSA_verify(int arg0, const uint8_t *arg1, size_t arg2, const uint8_t *arg3, size_t arg4, GO_RSA* arg5)
+{
+	return RSA_verify(arg0, arg1, arg2, arg3, arg4, arg5);
+}
+
 void _goboringcrypto_RSA_get0_key(const GO_RSA*, const GO_BIGNUM **n, const GO_BIGNUM **e, const GO_BIGNUM **d);
 void _goboringcrypto_RSA_get0_factors(const GO_RSA*, const GO_BIGNUM **p, const GO_BIGNUM **q);
 void _goboringcrypto_RSA_get0_crt_params(const GO_RSA*, const GO_BIGNUM **dmp1, const GO_BIGNUM **dmp2, const GO_BIGNUM **iqmp);
@@ -527,22 +539,13 @@ enum {
 	GO_RSA_PKCS1_OAEP_PADDING = 4,
 	GO_RSA_PKCS1_PSS_PADDING = 6,
 };
-static inline int
-_goboringcrypto_RSA_sign(int hash_nid, const uint8_t* in, unsigned int in_len, uint8_t *out, unsigned int *out_len, GO_RSA* arg5)
-{
-	return RSA_sign(hash_nid, in, in_len, out, out_len, arg5);
-}
 
 int _goboringcrypto_RSA_sign_pss_mgf1(GO_RSA*, size_t *out_len, uint8_t *out, size_t max_out, const uint8_t *in, size_t in_len, const GO_EVP_MD *md, const GO_EVP_MD *mgf1_md, int salt_len);
 int _goboringcrypto_RSA_sign_raw(GO_RSA*, size_t *out_len, uint8_t *out, size_t max_out, const uint8_t *in, size_t in_len, int padding);
-static inline int
-_goboringcrypto_RSA_verify(int hash_nid, const uint8_t *msg, size_t msg_len, const uint8_t *sig, size_t sig_len, GO_RSA* arg5)
-{
-	return RSA_verify(hash_nid, msg, msg_len, sig, sig_len, arg5);
-}
 
 int _goboringcrypto_RSA_verify_pss_mgf1(GO_RSA*, const uint8_t *msg, size_t msg_len, const GO_EVP_MD *md, const GO_EVP_MD *mgf1_md, int salt_len, const uint8_t *sig, size_t sig_len);
 int _goboringcrypto_RSA_verify_raw(GO_RSA*, size_t *out_len, uint8_t *out, size_t max_out, const uint8_t *in, size_t in_len, int padding);
+
 static inline unsigned
 _goboringcrypto_RSA_size(const GO_RSA* arg0)
 {
@@ -559,15 +562,15 @@ _goboringcrypto_RSA_check_key(const GO_RSA* arg0)
 #include <openssl/evp.h>
 
 int _goboringcrypto_EVP_CIPHER_CTX_seal(
-		int tls, uint8_t *out, uint8_t *nonce,
+		uint8_t *out, uint8_t *nonce,
 		uint8_t *aad, size_t aad_len,
 		uint8_t *plaintext, size_t plaintext_len,
 		size_t *ciphertext_len, uint8_t *key, int key_size);
 
 int _goboringcrypto_EVP_CIPHER_CTX_open(
-		int tls, uint8_t *ciphertext, int ciphertext_len,
+		uint8_t *ciphertext, int ciphertext_len,
 		uint8_t *aad, int aad_len,
-		uint8_t *tag, unsigned char *key, int key_size,
+		uint8_t *tag, uint8_t *key, int key_size,
 		uint8_t *nonce, int nonce_len,
 		uint8_t *plaintext, size_t *plaintext_len);
 
