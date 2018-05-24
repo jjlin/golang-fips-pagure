@@ -14,7 +14,6 @@ import "C"
 import (
 	"crypto/cipher"
 	"errors"
-	"fmt"
 	"runtime"
 	"strconv"
 	"unsafe"
@@ -200,7 +199,7 @@ func (c *aesCipher) NewGCMTLS() (cipher.AEAD, error) {
 func (c *aesCipher) newGCM(nonceSize int, tls bool) (cipher.AEAD, error) {
 	if nonceSize != gcmStandardNonceSize {
 		// Return error for GCM with non-standard nonce size.
-		return nil, fail(fmt.Sprintf("GCM invoked with non-standard nonce size: %v", nonceSize))
+		return nil, fail("GCM invoked with non-standard nonce size")
 	}
 
 	g := &aesGCM{key: c.key, tls: tls}
@@ -208,7 +207,7 @@ func (c *aesCipher) newGCM(nonceSize int, tls bool) (cipher.AEAD, error) {
 
 	if keyLen != 128 && keyLen != 256 {
 		// Return error for GCM with non-standard key size.
-		return nil, fail(fmt.Sprintf("GCM invoked with non-standard key size: %v", len(c.key)*8))
+		return nil, fail("GCM invoked with non-standard key size")
 	}
 
 	return g, nil
@@ -255,14 +254,18 @@ func (g *aesGCM) Seal(dst, nonce, plaintext, additionalData []byte) []byte {
 	}
 
 	var ciphertextLen C.size_t
-	C._goboringcrypto_EVP_CIPHER_CTX_seal(
-		g.tls, (*C.uint8_t)(unsafe.Pointer(&dst[n])),
+
+	if ok := C._goboringcrypto_EVP_CIPHER_CTX_seal(
+		(*C.uint8_t)(unsafe.Pointer(&dst[n])),
 		base(nonce), base(additionalData), C.size_t(len(additionalData)),
 		base(plaintext), C.size_t(len(plaintext)), &ciphertextLen,
-		base(g.key), len(g.key)*8)
+		base(g.key), C.int(len(g.key)*8)); ok != 1 {
+		panic("boringcrypto: EVP_CIPHER_CTX_seal fail")
+	}
+	runtime.KeepAlive(g)
 
 	if ciphertextLen != C.size_t(len(plaintext)+gcmTagSize) {
-		panic("boringcrypto: internal confusion about GCM tag size")
+		panic("boringcrypto: [seal] internal confusion about GCM tag size")
 	}
 	return dst[:n+int(ciphertextLen)]
 }
@@ -295,18 +298,23 @@ func (g *aesGCM) Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, er
 	tag := ciphertext[len(ciphertext)-gcmTagSize:]
 
 	var outLen C.size_t
+
 	ok := C._goboringcrypto_EVP_CIPHER_CTX_open(
-		base(ciphertext), C.size_t(len(ciphertext)-gcmTagSize),
-		base(additionalData), C.size_t(len(additionalData)),
-		base(tag), base(g.key), len(g.key)*8,
-		base(nonce), C.size_t(len(nonce)),
+		base(ciphertext), C.int(len(ciphertext)-gcmTagSize),
+		base(additionalData), C.int(len(additionalData)),
+		base(tag), base(g.key), C.int(len(g.key)*8),
+		base(nonce), C.int(len(nonce)),
 		base(dst[n:]), &outLen)
 	runtime.KeepAlive(g)
 	if ok == 0 {
+		// Zero output buffer on error.
+		for i := range dst {
+			dst[i] = 0
+		}
 		return nil, errOpen
 	}
 	if outLen != C.size_t(len(ciphertext)-gcmTagSize) {
-		panic("boringcrypto: internal confusion about GCM tag size")
+		panic("boringcrypto: [open] internal confusion about GCM tag size")
 	}
 	return dst[:n+int(outLen)], nil
 }
