@@ -37,10 +37,11 @@ func TestKeyGeneration(t *testing.T) {
 	if !boring.Enabled { // P-224 not supported in RHEL OpenSSL.
 		testKeyGeneration(t, elliptic.P224(), "p224")
 	}
+	testKeyGeneration(t, elliptic.P256(), "p256")
+
 	if testing.Short() && !boring.Enabled {
 		return
 	}
-	testKeyGeneration(t, elliptic.P256(), "p256")
 	testKeyGeneration(t, elliptic.P384(), "p384")
 	testKeyGeneration(t, elliptic.P521(), "p521")
 }
@@ -119,10 +120,11 @@ func TestSignAndVerify(t *testing.T) {
 	if !boring.Enabled { // P-224 not supported in RHEL OpenSSL.
 		testSignAndVerify(t, elliptic.P224(), "p224")
 	}
+	testSignAndVerify(t, elliptic.P256(), "p256")
+
 	if testing.Short() && !boring.Enabled {
 		return
 	}
-	testSignAndVerify(t, elliptic.P256(), "p256")
 	testSignAndVerify(t, elliptic.P384(), "p384")
 	testSignAndVerify(t, elliptic.P521(), "p521")
 }
@@ -158,10 +160,11 @@ func TestNonceSafety(t *testing.T) {
 	if !boring.Enabled { // P-224 not supported in RHEL OpenSSL.
 		testNonceSafety(t, elliptic.P224(), "p224")
 	}
+	testNonceSafety(t, elliptic.P256(), "p256")
+
 	if testing.Short() && !boring.Enabled {
 		return
 	}
-	testNonceSafety(t, elliptic.P256(), "p256")
 	testNonceSafety(t, elliptic.P384(), "p384")
 	testNonceSafety(t, elliptic.P521(), "p521")
 }
@@ -195,10 +198,11 @@ func TestINDCCA(t *testing.T) {
 	if !boring.Enabled { // P-224 not supported in RHEL OpenSSL.
 		testINDCCA(t, elliptic.P224(), "p224")
 	}
+	testINDCCA(t, elliptic.P256(), "p256")
+
 	if testing.Short() {
 		return
 	}
-	testINDCCA(t, elliptic.P256(), "p256")
 	testINDCCA(t, elliptic.P384(), "p384")
 	testINDCCA(t, elliptic.P521(), "p521")
 }

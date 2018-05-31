@@ -1343,6 +1343,9 @@ func TestAlertFlushing(t *testing.T) {
 	// Cause a signature-time error
 	brokenKey := rsa.PrivateKey{PublicKey: testRSAPrivateKey.PublicKey}
 	brokenKey.D = big.NewInt(42)
+	brokenKey.Precomputed.Dp = big.NewInt(42)
+	brokenKey.Precomputed.Dq = big.NewInt(42)
+	brokenKey.Precomputed.CRTValues = append([]rsa.CRTValue{}, rsa.CRTValue{Exp: big.NewInt(42), Coeff: big.NewInt(42), R: big.NewInt(42)})
 	serverConfig.Certificates = []Certificate{{
 		Certificate: [][]byte{testRSACertificate},
 		PrivateKey:  &brokenKey,

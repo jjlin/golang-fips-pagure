@@ -92,7 +92,7 @@ func (c *aesCipher) Decrypt(dst, src []byte) {
 }
 
 type aesCBC struct {
-	key  *C.GO_AES_KEY
+	key  []byte
 	mode C.int
 	iv   [aesBlockSize]byte
 }
@@ -110,10 +110,10 @@ func (x *aesCBC) CryptBlocks(dst, src []byte) {
 		panic("crypto/cipher: output smaller than input")
 	}
 	if len(src) > 0 {
-		C._goboringcrypto_AES_cbc_encrypt(
+		C._goboringcrypto_EVP_AES_cbc_encrypt(
 			(*C.uint8_t)(unsafe.Pointer(&src[0])),
 			(*C.uint8_t)(unsafe.Pointer(&dst[0])),
-			C.size_t(len(src)), x.key,
+			C.size_t(len(src)), (*C.uint8_t)(unsafe.Pointer(&x.key[0])), C.size_t(len(x.key)*8),
 			(*C.uint8_t)(unsafe.Pointer(&x.iv[0])), x.mode)
 	}
 }
@@ -126,19 +126,19 @@ func (x *aesCBC) SetIV(iv []byte) {
 }
 
 func (c *aesCipher) NewCBCEncrypter(iv []byte) cipher.BlockMode {
-	x := &aesCBC{key: &c.enc, mode: C.GO_AES_ENCRYPT}
+	x := &aesCBC{key: c.key, mode: C.GO_AES_ENCRYPT}
 	copy(x.iv[:], iv)
 	return x
 }
 
 func (c *aesCipher) NewCBCDecrypter(iv []byte) cipher.BlockMode {
-	x := &aesCBC{key: &c.dec, mode: C.GO_AES_DECRYPT}
+	x := &aesCBC{key: c.key, mode: C.GO_AES_DECRYPT}
 	copy(x.iv[:], iv)
 	return x
 }
 
 type aesCTR struct {
-	key        *C.GO_AES_KEY
+	key        []byte
 	iv         [aesBlockSize]byte
 	num        C.uint
 	ecount_buf [16]C.uint8_t
@@ -154,15 +154,15 @@ func (x *aesCTR) XORKeyStream(dst, src []byte) {
 	if len(src) == 0 {
 		return
 	}
-	C._goboringcrypto_AES_ctr128_encrypt(
+	C._goboringcrypto_EVP_AES_ctr128_enc(
 		(*C.uint8_t)(unsafe.Pointer(&src[0])),
 		(*C.uint8_t)(unsafe.Pointer(&dst[0])),
-		C.size_t(len(src)), x.key, (*C.uint8_t)(unsafe.Pointer(&x.iv[0])),
+		C.size_t(len(src)), (*C.uint8_t)(unsafe.Pointer(&x.key[0])), C.size_t(len(x.key)*8), (*C.uint8_t)(unsafe.Pointer(&x.iv[0])),
 		&x.ecount_buf[0], &x.num)
 }
 
 func (c *aesCipher) NewCTR(iv []byte) cipher.Stream {
-	x := &aesCTR{key: &c.enc}
+	x := &aesCTR{key: c.key}
 	copy(x.iv[:], iv)
 	return x
 }
