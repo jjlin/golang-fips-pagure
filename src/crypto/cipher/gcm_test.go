@@ -194,8 +194,8 @@ var aesGCMTests = []struct {
 func TestAESGCM(t *testing.T) {
 	for i, test := range aesGCMTests {
 		if boring.Enabled {
-			if len(test.nonce) != 16 {
-				t.Skip("skipping non-standard nonce size test in boring mode")
+			if len(test.nonce) != 12 {
+				continue
 			}
 		}
 		key, _ := hex.DecodeString(test.key)
