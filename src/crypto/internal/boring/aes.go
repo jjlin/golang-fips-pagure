@@ -95,6 +95,7 @@ type aesCBC struct {
 	key  []byte
 	mode C.int
 	iv   [aesBlockSize]byte
+	ctx  *C.EVP_CIPHER_CTX
 }
 
 func (x *aesCBC) BlockSize() int { return aesBlockSize }
@@ -110,12 +111,12 @@ func (x *aesCBC) CryptBlocks(dst, src []byte) {
 		panic("crypto/cipher: output smaller than input")
 	}
 	if len(src) > 0 {
-		C._goboringcrypto_EVP_AES_cbc_encrypt(
+		C._goboringcrypto_EVP_AES_cbc_encrypt(x.ctx,
 			(*C.uint8_t)(unsafe.Pointer(&src[0])),
 			(*C.uint8_t)(unsafe.Pointer(&dst[0])),
-			C.size_t(len(src)), (*C.uint8_t)(unsafe.Pointer(&x.key[0])), C.size_t(len(x.key)*8),
-			(*C.uint8_t)(unsafe.Pointer(&x.iv[0])), x.mode)
+			C.size_t(len(src)), x.mode)
 	}
+	runtime.KeepAlive(x)
 }
 
 func (x *aesCBC) SetIV(iv []byte) {
@@ -128,18 +129,74 @@ func (x *aesCBC) SetIV(iv []byte) {
 func (c *aesCipher) NewCBCEncrypter(iv []byte) cipher.BlockMode {
 	x := &aesCBC{key: c.key, mode: C.GO_AES_ENCRYPT}
 	copy(x.iv[:], iv)
+
+	x.ctx = C.EVP_CIPHER_CTX_new()
+	if x.ctx == nil {
+		panic("cipher: unable to create EVP cipher ctx")
+	}
+
+	k := (*C.uchar)(unsafe.Pointer(&x.key[0]))
+	vec := (*C.uchar)(unsafe.Pointer(&x.iv[0]))
+
+	switch len(c.key) * 8 {
+	case 128:
+		if C.int(1) != C.EVP_EncryptInit_ex(x.ctx, C.EVP_aes_128_cbc(), nil, k, vec) {
+			panic("cipher: unable to initialize EVP cipher ctx")
+		}
+	case 192:
+		if C.int(1) != C.EVP_EncryptInit_ex(x.ctx, C.EVP_aes_192_cbc(), nil, k, vec) {
+			panic("cipher: unable to initialize EVP cipher ctx")
+		}
+	case 256:
+		if C.int(1) != C.EVP_EncryptInit_ex(x.ctx, C.EVP_aes_256_cbc(), nil, k, vec) {
+			panic("cipher: unable to initialize EVP cipher ctx")
+		}
+	}
+
+	runtime.SetFinalizer(x, (*aesCBC).finalize)
+
 	return x
+}
+
+func (c *aesCBC) finalize() {
+	C.EVP_CIPHER_CTX_free(c.ctx)
 }
 
 func (c *aesCipher) NewCBCDecrypter(iv []byte) cipher.BlockMode {
 	x := &aesCBC{key: c.key, mode: C.GO_AES_DECRYPT}
 	copy(x.iv[:], iv)
+
+	x.ctx = C.EVP_CIPHER_CTX_new()
+	if x.ctx == nil {
+		panic("cipher: unable to create EVP cipher ctx")
+	}
+
+	k := (*C.uchar)(unsafe.Pointer(&x.key[0]))
+	vec := (*C.uchar)(unsafe.Pointer(&x.iv[0]))
+
+	switch len(c.key) * 8 {
+	case 128:
+		if C.int(1) != C.EVP_DecryptInit_ex(x.ctx, C.EVP_aes_128_cbc(), nil, k, vec) {
+			panic("cipher: unable to initialize EVP cipher ctx")
+		}
+	case 192:
+		if C.int(1) != C.EVP_DecryptInit_ex(x.ctx, C.EVP_aes_192_cbc(), nil, k, vec) {
+			panic("cipher: unable to initialize EVP cipher ctx")
+		}
+	case 256:
+		if C.int(1) != C.EVP_DecryptInit_ex(x.ctx, C.EVP_aes_256_cbc(), nil, k, vec) {
+			panic("cipher: unable to initialize EVP cipher ctx")
+		}
+	}
+
+	runtime.SetFinalizer(x, (*aesCBC).finalize)
 	return x
 }
 
 type aesCTR struct {
 	key        []byte
 	iv         [aesBlockSize]byte
+	ctx        *C.EVP_CIPHER_CTX
 	num        C.uint
 	ecount_buf [16]C.uint8_t
 }
@@ -155,16 +212,47 @@ func (x *aesCTR) XORKeyStream(dst, src []byte) {
 		return
 	}
 	C._goboringcrypto_EVP_AES_ctr128_enc(
+		x.ctx,
 		(*C.uint8_t)(unsafe.Pointer(&src[0])),
 		(*C.uint8_t)(unsafe.Pointer(&dst[0])),
-		C.size_t(len(src)), (*C.uint8_t)(unsafe.Pointer(&x.key[0])), C.size_t(len(x.key)*8), (*C.uint8_t)(unsafe.Pointer(&x.iv[0])),
-		&x.ecount_buf[0], &x.num)
+		C.size_t(len(src)))
+	runtime.KeepAlive(x)
 }
 
 func (c *aesCipher) NewCTR(iv []byte) cipher.Stream {
 	x := &aesCTR{key: c.key}
 	copy(x.iv[:], iv)
+
+	x.ctx = C.EVP_CIPHER_CTX_new()
+	if x.ctx == nil {
+		panic("cipher: unable to create EVP cipher ctx")
+	}
+
+	k := (*C.uchar)(unsafe.Pointer(&x.key[0]))
+	vec := (*C.uchar)(unsafe.Pointer(&x.iv[0]))
+
+	switch len(c.key) * 8 {
+	case 128:
+		if C.int(1) != C.EVP_EncryptInit_ex(x.ctx, C.EVP_aes_128_cbc(), nil, k, vec) {
+			panic("cipher: unable to initialize EVP cipher ctx")
+		}
+	case 192:
+		if C.int(1) != C.EVP_EncryptInit_ex(x.ctx, C.EVP_aes_192_cbc(), nil, k, vec) {
+			panic("cipher: unable to initialize EVP cipher ctx")
+		}
+	case 256:
+		if C.int(1) != C.EVP_EncryptInit_ex(x.ctx, C.EVP_aes_256_cbc(), nil, k, vec) {
+			panic("cipher: unable to initialize EVP cipher ctx")
+		}
+	}
+
+	runtime.SetFinalizer(x, (*aesCTR).finalize)
+
 	return x
+}
+
+func (c *aesCTR) finalize() {
+	C.EVP_CIPHER_CTX_free(c.ctx)
 }
 
 type aesGCM struct {

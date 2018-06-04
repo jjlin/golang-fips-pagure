@@ -111,7 +111,7 @@ int _goboringcrypto_RSA_sign_pss_mgf1(RSA *rsa, size_t *out_len, uint8_t *out, s
 		goto err;
 	if (EVP_PKEY_CTX_set_rsa_pss_saltlen(ctx, salt_len) <= 0)
 		goto err;
-	if (EVP_PKEY_CTX_set_signature_md(ctx, md) <= 0)
+	if (EVP_PKEY_CTX_set_rsa_mgf1_md(ctx, md) <= 0)
 		goto err;
 	
 	/* Determine buffer length */
@@ -158,7 +158,7 @@ int _goboringcrypto_RSA_verify_pss_mgf1(RSA *rsa, const uint8_t *msg, size_t msg
 		goto err;
 	if (EVP_PKEY_CTX_set_rsa_pss_saltlen(ctx, salt_len) <= 0)
 		goto err;
-	if (EVP_PKEY_CTX_set_signature_md(ctx, md) <= 0)
+	if (EVP_PKEY_CTX_set_rsa_mgf1_md(ctx, md) <= 0)
 		goto err;
 	if (EVP_PKEY_verify(ctx, sig, sig_len, msg, msg_len) <= 0)
 		goto err;
