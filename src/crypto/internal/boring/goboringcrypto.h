@@ -259,30 +259,6 @@ int _goboringcrypto_HMAC_CTX_copy_ex(GO_HMAC_CTX *dest, const GO_HMAC_CTX *src);
 
 #include <openssl/aes.h>
 
-typedef AES_KEY GO_AES_KEY;
-static inline int
-_goboringcrypto_AES_set_encrypt_key(const uint8_t* arg0, unsigned int arg1, GO_AES_KEY* arg2)
-{
-	return AES_set_encrypt_key(arg0, arg1, arg2);
-}
-
-static inline int
-_goboringcrypto_AES_set_decrypt_key(const uint8_t* arg0, unsigned int arg1, GO_AES_KEY* arg2)
-{
-	return AES_set_decrypt_key(arg0, arg1, arg2);
-}
-
-static inline void
-_goboringcrypto_AES_encrypt(const uint8_t* arg0, uint8_t* arg1, const GO_AES_KEY* arg2)
-{
-	AES_encrypt(arg0, arg1, arg2);
-}
-
-static inline void
-_goboringcrypto_AES_decrypt(const uint8_t* arg0, uint8_t* arg1, const GO_AES_KEY* arg2)
-{
-	AES_decrypt(arg0, arg1, arg2);
-}
 
 void
 _goboringcrypto_EVP_AES_ctr128_enc(EVP_CIPHER_CTX *ctx, const uint8_t* in, uint8_t* out, size_t len);
@@ -303,12 +279,6 @@ _goboringcrypto_EVP_CipherUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out,
 
 int
 _goboringcrypto_EVP_AES_encrypt(EVP_CIPHER_CTX *ctx, const uint8_t *in, size_t in_len, uint8_t *out);
-
-static inline void
-_goboringcrypto_AES_cbc_encrypt(const uint8_t* arg0, uint8_t* arg1, size_t arg2, const GO_AES_KEY* arg3, uint8_t* arg4, const int arg5)
-{
-	AES_cbc_encrypt(arg0, arg1, arg2, arg3, arg4, arg5);
-}
 
 enum {
 	GO_AES_ENCRYPT = 1,

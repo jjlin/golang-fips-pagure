@@ -31,6 +31,7 @@ type aesCipher struct {
 	key     []byte
 	enc_ctx *C.EVP_CIPHER_CTX
 	dec_ctx *C.EVP_CIPHER_CTX
+	cipher  *C.EVP_CIPHER
 }
 
 type extraModes interface {
@@ -49,6 +50,17 @@ var _ extraModes = (*aesCipher)(nil)
 func NewAESCipher(key []byte) (cipher.Block, error) {
 	c := &aesCipher{key: make([]byte, len(key))}
 	copy(c.key, key)
+
+	switch len(c.key) * 8 {
+	case 128:
+		c.cipher = C.EVP_aes_128_ecb()
+	case 192:
+		c.cipher = C.EVP_aes_192_ecb()
+	case 256:
+		c.cipher = C.EVP_aes_256_ecb()
+	default:
+		return nil, errors.New("crypto/cipher: Invalid key size")
+	}
 
 	runtime.SetFinalizer(c, (*aesCipher).finalize)
 
@@ -85,18 +97,7 @@ func (c *aesCipher) Encrypt(dst, src []byte) {
 
 		k := (*C.uchar)(unsafe.Pointer(&c.key[0]))
 
-		var cipher *C.EVP_CIPHER
-		switch len(c.key) * 8 {
-		case 128:
-			cipher = C.EVP_aes_128_ecb()
-		case 192:
-			cipher = C.EVP_aes_192_ecb()
-		case 256:
-			cipher = C.EVP_aes_256_ecb()
-		default:
-			panic("invalid key size")
-		}
-		if C.int(1) != C.EVP_CipherInit_ex(c.enc_ctx, cipher, nil, k, nil, C.GO_AES_ENCRYPT) {
+		if C.int(1) != C.EVP_CipherInit_ex(c.enc_ctx, c.cipher, nil, k, nil, C.GO_AES_ENCRYPT) {
 			panic("cipher: unable to initialize EVP cipher ctx")
 		}
 	}
@@ -124,18 +125,7 @@ func (c *aesCipher) Decrypt(dst, src []byte) {
 
 		k := (*C.uchar)(unsafe.Pointer(&c.key[0]))
 
-		var cipher *C.EVP_CIPHER
-		switch len(c.key) * 8 {
-		case 128:
-			cipher = C.EVP_aes_128_ecb()
-		case 192:
-			cipher = C.EVP_aes_192_ecb()
-		case 256:
-			cipher = C.EVP_aes_256_ecb()
-		default:
-			panic("invalid key size")
-		}
-		if C.int(1) != C.EVP_CipherInit_ex(c.dec_ctx, cipher, nil, k, nil, C.GO_AES_DECRYPT) {
+		if C.int(1) != C.EVP_CipherInit_ex(c.dec_ctx, c.cipher, nil, k, nil, C.GO_AES_DECRYPT) {
 			panic("cipher: unable to initialize EVP cipher ctx")
 		}
 	}
