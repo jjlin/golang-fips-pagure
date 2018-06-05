@@ -167,8 +167,13 @@ func adddynrel(ctxt *ld.Link, s *sym.Symbol, r *sym.Reloc) bool {
 		r.Add += int64(targ.Got)
 		return true
 
+<<<<<<< HEAD
 	case 256 + objabi.RelocType(elf.R_X86_64_64):
 		if targ.Type == sym.SDYNIMPORT {
+=======
+	case 256 + ld.R_X86_64_64:
+		if targ.Type == ld.SDYNIMPORT {
+>>>>>>> crypto/boring: FIPS compliance with OpenSSL
 			// ld.Errorf(s, "unexpected R_X86_64_64 relocation for dynamic symbol %s", targ.Name)
 		}
 		r.Type = objabi.R_ADDR
