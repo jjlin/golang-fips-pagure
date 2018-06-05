@@ -112,17 +112,17 @@ func (x *aesCBC) CryptBlocks(dst, src []byte) {
 		panic("crypto/cipher: output smaller than input")
 	}
 	if len(src) > 0 {
-		C._goboringcrypto_AES_cbc_encrypt(
-			(*C.uint8_t)(unsafe.Pointer(&src[0])),
-			(*C.uint8_t)(unsafe.Pointer(&dst[0])),
-			C.size_t(len(src)), x.key2,
-			(*C.uint8_t)(unsafe.Pointer(&x.iv[0])), x.mode)
-		// C._goboringcrypto_EVP_AES_cbc_encrypt(x.ctx,
-		// 	(*C.uint8_t)(unsafe.Pointer(&src[0])),
-		// 	(*C.uint8_t)(unsafe.Pointer(&dst[0])),
-		// 	C.size_t(len(src)), x.mode)
+		// Must set IV every time.
+		if C._goboringcrypto_EVP_CipherInit_ex(x.ctx, nil, nil, nil, (*C.uchar)(unsafe.Pointer(&x.iv[0])), -1) != 1 {
+			panic("crypto/cipher: CipherInit_ex failed to set IV")
+		}
+		runtime.KeepAlive(x)
+		outlen := C.int(0)
+		if C._goboringcrypto_EVP_CipherUpdate(x.ctx, (*C.uchar)(unsafe.Pointer(&dst[0])), &outlen, (*C.uchar)(unsafe.Pointer(&src[0])), C.int(len(src))) != 1 {
+			panic("crypto/cipher: CipherUpdate failed")
+		}
+		runtime.KeepAlive(x)
 	}
-	runtime.KeepAlive(x)
 }
 
 func (x *aesCBC) SetIV(iv []byte) {

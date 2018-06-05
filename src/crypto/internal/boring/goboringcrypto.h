@@ -287,6 +287,20 @@ _goboringcrypto_AES_decrypt(const uint8_t* arg0, uint8_t* arg1, const GO_AES_KEY
 void
 _goboringcrypto_EVP_AES_ctr128_enc(EVP_CIPHER_CTX *ctx, const uint8_t* in, uint8_t* out, size_t len);
 
+static inline int
+_goboringcrypto_EVP_CipherInit_ex(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
+         ENGINE *impl, const unsigned char *key, const unsigned char *iv, int enc)
+{
+	return EVP_CipherInit_ex(ctx, type, impl, key, iv, enc);
+}
+
+static inline int
+_goboringcrypto_EVP_CipherUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out,
+         int *outl, const unsigned char *in, int inl)
+{
+	return EVP_CipherUpdate(ctx, out, outl, in, inl);
+}
+
 static inline void
 _goboringcrypto_AES_cbc_encrypt(const uint8_t* arg0, uint8_t* arg1, size_t arg2, const GO_AES_KEY* arg3, uint8_t* arg4, const int arg5)
 {
@@ -298,7 +312,7 @@ enum {
 	GO_AES_DECRYPT = 0
 };
 void
-_goboringcrypto_EVP_AES_cbc_encrypt(EVP_CIPHER_CTX *ctx, const uint8_t* arg0, uint8_t* arg1, size_t arg2, const int arg5);
+_goboringcrypto_EVP_AES_cbc_encrypt(EVP_CIPHER_CTX *ctx, const uint8_t* arg0, uint8_t* arg1, size_t arg2, const uint8_t *a, const int arg5);
 
 void
 EVP_AES_cbc_enc(EVP_CIPHER_CTX *ctx, const uint8_t *in, uint8_t *out, size_t len);
