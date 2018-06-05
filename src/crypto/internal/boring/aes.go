@@ -49,11 +49,6 @@ var _ extraModes = (*aesCipher)(nil)
 func NewAESCipher(key []byte) (cipher.Block, error) {
 	c := &aesCipher{key: make([]byte, len(key))}
 	copy(c.key, key)
-	// Note: 0 is success, contradicting the usual BoringCrypto convention.
-	if C._goboringcrypto_AES_set_decrypt_key((*C.uint8_t)(unsafe.Pointer(&c.key[0])), C.uint(8*len(c.key)), &c.dec) != 0 ||
-		C._goboringcrypto_AES_set_encrypt_key((*C.uint8_t)(unsafe.Pointer(&c.key[0])), C.uint(8*len(c.key)), &c.enc) != 0 {
-		return nil, aesKeySizeError(len(key))
-	}
 	return c, nil
 }
 
@@ -112,11 +107,6 @@ func (x *aesCBC) CryptBlocks(dst, src []byte) {
 		panic("crypto/cipher: output smaller than input")
 	}
 	if len(src) > 0 {
-		// Must set IV every time.
-		if C._goboringcrypto_EVP_CipherInit_ex(x.ctx, nil, nil, nil, (*C.uchar)(unsafe.Pointer(&x.iv[0])), -1) != 1 {
-			panic("crypto/cipher: CipherInit_ex failed to set IV")
-		}
-		runtime.KeepAlive(x)
 		outlen := C.int(0)
 		if C._goboringcrypto_EVP_CipherUpdate(x.ctx, (*C.uchar)(unsafe.Pointer(&dst[0])), &outlen, (*C.uchar)(unsafe.Pointer(&src[0])), C.int(len(src))) != 1 {
 			panic("crypto/cipher: CipherUpdate failed")
@@ -130,6 +120,10 @@ func (x *aesCBC) SetIV(iv []byte) {
 		panic("cipher: incorrect length IV")
 	}
 	copy(x.iv[:], iv)
+	if C._goboringcrypto_EVP_CipherInit_ex(x.ctx, nil, nil, nil, (*C.uchar)(unsafe.Pointer(&x.iv[0])), -1) != 1 {
+		panic("crypto/cipher: CipherInit_ex failed to set IV")
+	}
+	runtime.KeepAlive(x)
 }
 
 func (c *aesCipher) NewCBCEncrypter(iv []byte) cipher.BlockMode {
