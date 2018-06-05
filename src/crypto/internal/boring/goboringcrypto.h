@@ -287,6 +287,12 @@ _goboringcrypto_AES_decrypt(const uint8_t* arg0, uint8_t* arg1, const GO_AES_KEY
 void
 _goboringcrypto_EVP_AES_ctr128_enc(EVP_CIPHER_CTX *ctx, const uint8_t* in, uint8_t* out, size_t len);
 
+static inline void
+_goboringcrypto_AES_cbc_encrypt(const uint8_t* arg0, uint8_t* arg1, size_t arg2, const GO_AES_KEY* arg3, uint8_t* arg4, const int arg5)
+{
+	AES_cbc_encrypt(arg0, arg1, arg2, arg3, arg4, arg5);
+}
+
 enum {
 	GO_AES_ENCRYPT = 1,
 	GO_AES_DECRYPT = 0
