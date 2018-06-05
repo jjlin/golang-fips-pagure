@@ -301,6 +301,9 @@ _goboringcrypto_EVP_CipherUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out,
 	return EVP_CipherUpdate(ctx, out, outl, in, inl);
 }
 
+int
+_goboringcrypto_EVP_AES_encrypt(EVP_CIPHER_CTX *ctx, const uint8_t *in, size_t in_len, uint8_t *out);
+
 static inline void
 _goboringcrypto_AES_cbc_encrypt(const uint8_t* arg0, uint8_t* arg1, size_t arg2, const GO_AES_KEY* arg3, uint8_t* arg4, const int arg5)
 {

@@ -22,7 +22,7 @@ func TestNewGCMNonce(t *testing.T) {
 
 func TestNewAESCipher(t *testing.T) {
 	// Should return an error for non-standard key size.
-	key := []byte("D249BF6DEC97B1EBD69BC4D6B3A3C49DF")
+	key := []byte("D24")
 	_, err := NewAESCipher(key)
 	if err == nil {
 		t.Error("expected error for non-standard key size, got none")
