@@ -19,19 +19,3 @@ func TestNewGCMNonce(t *testing.T) {
 		t.Errorf("expected no error for standard nonce size, got: %#v", err)
 	}
 }
-
-func TestNewAESCipher(t *testing.T) {
-	// Should return an error for non-standard key size.
-	key := []byte("D24")
-	_, err := NewAESCipher(key)
-	if err == nil {
-		t.Error("expected error for non-standard key size, got none")
-	}
-
-	// No error using standard key size.
-	key = []byte("D249BF6DEC97B1EBD69BC4D6B3A3C49D")
-	_, err = NewAESCipher(key)
-	if err != nil {
-		t.Errorf("expected no error for standard key size, got: %#v", err)
-	}
-}
