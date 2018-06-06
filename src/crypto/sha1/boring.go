@@ -6,10 +6,7 @@
 // cmd/internal/boring is not even imported, so that we don't
 // have to maintain changes to cmd/dist's deps graph.
 
-// +build linux,amd64
-// +build !android
 // +build !cmd_go_bootstrap
-// +build !msan
 
 package sha1
 
