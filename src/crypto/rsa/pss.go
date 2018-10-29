@@ -199,7 +199,7 @@ func signPSSWithSalt(rand io.Reader, priv *PrivateKey, hash crypto.Hash, hashed,
 		return
 	}
 
-	if boring.Enabled {
+	if boring.Enabled() {
 		boringFakeRandomBlind(rand, priv)
 		bkey, err := boringPrivateKey(priv)
 		if err != nil {
@@ -276,7 +276,7 @@ func SignPSS(rand io.Reader, priv *PrivateKey, hash crypto.Hash, hashed []byte, 
 		hash = opts.Hash
 	}
 
-	if boring.Enabled && rand == boring.RandReader {
+	if boring.Enabled() && rand == boring.RandReader {
 		bkey, err := boringPrivateKey(priv)
 		if err != nil {
 			return nil, err
@@ -302,7 +302,7 @@ func VerifyPSS(pub *PublicKey, hash crypto.Hash, hashed []byte, sig []byte, opts
 
 // verifyPSS verifies a PSS signature with the given salt length.
 func verifyPSS(pub *PublicKey, hash crypto.Hash, hashed []byte, sig []byte, saltLen int) error {
-	if boring.Enabled {
+	if boring.Enabled() {
 		bkey, err := boringPublicKey(pub)
 		if err != nil {
 			return err
