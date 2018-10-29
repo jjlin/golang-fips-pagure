@@ -78,7 +78,7 @@ func (priv *PrivateKey) Public() crypto.PublicKey {
 // where the private part is kept in, for example, a hardware module. Common
 // uses should use the Sign function in this package directly.
 func (priv *PrivateKey) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
-	if boring.Enabled && rand == boring.RandReader {
+	if boring.Enabled() && rand == boring.RandReader {
 		b, err := boringPrivateKey(priv)
 		if err != nil {
 			return nil, err
@@ -116,7 +116,7 @@ func randFieldElement(c elliptic.Curve, rand io.Reader) (k *big.Int, err error) 
 
 // GenerateKey generates a public and private key pair.
 func GenerateKey(c elliptic.Curve, rand io.Reader) (*PrivateKey, error) {
-	if boring.Enabled {
+	if boring.Enabled() {
 		x, y, d, err := boring.GenerateKeyECDSA(c.Params().Name)
 		if err != nil {
 			return nil, err
@@ -176,7 +176,7 @@ var errZeroParam = errors.New("zero parameter")
 // returns the signature as a pair of integers. The security of the private key
 // depends on the entropy of rand.
 func Sign(rand io.Reader, priv *PrivateKey, hash []byte) (r, s *big.Int, err error) {
-	if boring.Enabled && rand == boring.RandReader {
+	if boring.Enabled() && rand == boring.RandReader {
 		b, err := boringPrivateKey(priv)
 		if err != nil {
 			return nil, nil, err
@@ -261,7 +261,7 @@ func Sign(rand io.Reader, priv *PrivateKey, hash []byte) (r, s *big.Int, err err
 // Verify verifies the signature in r, s of hash using the public key, pub. Its
 // return value records whether the signature is valid.
 func Verify(pub *PublicKey, hash []byte, r, s *big.Int) bool {
-	if boring.Enabled {
+	if boring.Enabled() {
 		b, err := boringPublicKey(pub)
 		if err != nil {
 			return false
