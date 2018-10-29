@@ -17,7 +17,7 @@ func AESGCMSupport() bool {
 	// If BoringCrypto is enabled, we report having
 	// AES-GCM support, so that crypto/tls will
 	// prioritize AES-GCM usage.
-	if boring.Enabled {
+	if boring.Enabled() {
 		return true
 	}
 	return hasAESNI()
