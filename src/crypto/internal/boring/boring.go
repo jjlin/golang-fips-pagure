@@ -15,9 +15,7 @@ package boring
 import "C"
 import (
 	"crypto/internal/boring/sig"
-	"io/ioutil"
 	"math/big"
-	"os"
 	"runtime"
 )
 
@@ -34,11 +32,8 @@ func init() {
 	defer runtime.UnlockOSThread()
 	// Check to see if the system is running in FIPS mode, if so
 	// enable "boring" mode to call into OpenSSL for FIPS compliance.
-	if systemFIPSEnabled() {
+	if fipsModeEnabled() {
 		enableBoringFIPSMode()
-		if !fipsModeEnabled() {
-			panic("boringcrypto: not in FIPS mode")
-		}
 	}
 	sig.BoringCrypto()
 }
@@ -49,37 +44,10 @@ func enableBoringFIPSMode() {
 	if C._goboringcrypto_OPENSSL_thread_setup() != 1 {
 		panic("boringcrypto: OpenSSL thread setup failed")
 	}
-	// By setting FIPS mode on, the power on self test will run.
-	if C._goboringcrypto_FIPS_mode_set(fipsOn) != fipsOn {
-		panic("boringcrypto: not in FIPS mode")
-	}
 }
 
 func fipsModeEnabled() bool {
 	return C._goboringcrypto_FIPS_mode() == fipsOn
-}
-
-func systemFIPSEnabled() bool {
-	var f *os.File
-	defer func() {
-		if f != nil {
-			f.Close()
-		}
-	}()
-	_, err := os.Stat("/etc/system-fips")
-	if err != nil {
-		return false
-	}
-	f, err = os.Open("/proc/sys/crypto/fips_enabled")
-	if err != nil {
-		return false
-	}
-	var b []byte
-	b, err = ioutil.ReadAll(f)
-	if err != nil {
-		return false
-	}
-	return string(b) == "1"
 }
 
 // Unreachable marks code that should be unreachable
