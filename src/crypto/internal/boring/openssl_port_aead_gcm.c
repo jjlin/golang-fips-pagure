@@ -27,18 +27,18 @@ int _goboringcrypto_EVP_CIPHER_CTX_seal(
 	}
 
 	// Create and initialise the context.
-	if(!(ctx = EVP_CIPHER_CTX_new())) {
+	if(!(ctx = _goboringcrypto_EVP_CIPHER_CTX_new())) {
 		goto err;
 	}
 
 	switch(key_size) {
 		case 128:
-			if (!EVP_EncryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL)) {
+			if (!_goboringcrypto_EVP_EncryptInit_ex(ctx, _goboringcrypto_EVP_aes_128_gcm(), NULL, NULL, NULL)) {
 				goto err;
 			}
 			break;
 		case 256:
-			if (!EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL)) {
+			if (!_goboringcrypto_EVP_EncryptInit_ex(ctx, _goboringcrypto_EVP_aes_256_gcm(), NULL, NULL, NULL)) {
 				goto err;
 			}
 			break;
@@ -47,33 +47,33 @@ int _goboringcrypto_EVP_CIPHER_CTX_seal(
 	}
 
 	// Initialize nonce.
-	if (!EVP_EncryptInit_ex(ctx, NULL, NULL, key, nonce)) {
+	if (!_goboringcrypto_EVP_EncryptInit_ex(ctx, NULL, NULL, key, nonce)) {
 		goto err;
 	}
 
 	// Provide AAD data.
-	if (!EVP_EncryptUpdate(ctx, NULL, &len, aad, aad_len)) {
+	if (!_goboringcrypto_EVP_EncryptUpdate(ctx, NULL, &len, aad, aad_len)) {
 		goto err;
 	}
 
-	if (!EVP_EncryptUpdate(ctx, out, &len, plaintext, plaintext_len)) {
+	if (!_goboringcrypto_EVP_EncryptUpdate(ctx, out, &len, plaintext, plaintext_len)) {
 		goto err;
 	}
 	*ciphertext_len = len;
 
-	if (!EVP_EncryptFinal_ex(ctx, out + len, &len)) {
+	if (!_goboringcrypto_EVP_EncryptFinal_ex(ctx, out + len, &len)) {
 		goto err;
 	}
 	*ciphertext_len += len;
 
-	if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, out+(*ciphertext_len))) {
+	if (!_goboringcrypto_EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, out+(*ciphertext_len))) {
 		goto err;
 	}
 	*ciphertext_len += 16;
 	ret = 1;
 
 err:
-	EVP_CIPHER_CTX_free(ctx);
+	_goboringcrypto_EVP_CIPHER_CTX_free(ctx);
 
 	if(ret > 0) {
 		return ret;
@@ -98,48 +98,48 @@ int _goboringcrypto_EVP_CIPHER_CTX_open(
 	}
 
 	// Create and initialise the context.
-	if(!(ctx = EVP_CIPHER_CTX_new())) return 0;
+	if(!(ctx = _goboringcrypto_EVP_CIPHER_CTX_new())) return 0;
 
 	switch(key_size) {
 		case 128:
-			if (!EVP_DecryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL)) {
+			if (!_goboringcrypto_EVP_DecryptInit_ex(ctx, _goboringcrypto_EVP_aes_128_gcm(), NULL, NULL, NULL)) {
 				goto err;
 			}
 			break;
 		case 256:
-			if (!EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL)) {
+			if (!_goboringcrypto_EVP_DecryptInit_ex(ctx, _goboringcrypto_EVP_aes_256_gcm(), NULL, NULL, NULL)) {
 				goto err;
 			}
 			break;
 	}
 
 	// Initialize key and nonce.
-	if(!EVP_DecryptInit_ex(ctx, NULL, NULL, key, nonce)) {
+	if(!_goboringcrypto_EVP_DecryptInit_ex(ctx, NULL, NULL, key, nonce)) {
 		goto err;
 	}
 
 	// Provide any AAD data.
-	if(!EVP_DecryptUpdate(ctx, NULL, &len, aad, aad_len)) {
+	if(!_goboringcrypto_EVP_DecryptUpdate(ctx, NULL, &len, aad, aad_len)) {
 		goto err;
 	}
 
 	// Provide the message to be decrypted, and obtain the plaintext output.
-	if(!EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len)) {
+	if(!_goboringcrypto_EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len)) {
 		goto err;
 	}
 	*plaintext_len = len;
 
 	// Set expected tag value. Works in OpenSSL 1.0.1d and later.
-	if(!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, 16, tag)) {
+	if(!_goboringcrypto_EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, 16, tag)) {
 		goto err;
 	}
 
 	// Finalise the decryption. A positive return value indicates success,
 	// anything else is a failure - the plaintext is not trustworthy.
-	ret = EVP_DecryptFinal_ex(ctx, plaintext + len, &len);
+	ret = _goboringcrypto_EVP_DecryptFinal_ex(ctx, plaintext + len, &len);
 
 err:
-	EVP_CIPHER_CTX_free(ctx);
+	_goboringcrypto_EVP_CIPHER_CTX_free(ctx);
 
 	if(ret > 0) {
 		// Success

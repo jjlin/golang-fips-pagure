@@ -177,8 +177,8 @@ func GenerateKeyECDSA(curve string) (X, Y, D *big.Int, err error) {
 		return nil, nil, nil, fail("EC_KEY_new_by_curve_name")
 	}
 	defer C._goboringcrypto_EC_KEY_free(key)
-	if C._goboringcrypto_EC_KEY_generate_key_fips(key) == 0 {
-		return nil, nil, nil, fail("EC_KEY_generate_key_fips")
+	if C._goboringcrypto_EC_KEY_generate_key(key) == 0 {
+		return nil, nil, nil, fail("EC_KEY_generate_key")
 	}
 	group := C._goboringcrypto_EC_KEY_get0_group(key)
 	pt := C._goboringcrypto_EC_KEY_get0_public_key(key)

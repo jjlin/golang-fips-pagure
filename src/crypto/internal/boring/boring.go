@@ -11,7 +11,7 @@
 package boring
 
 // #include "goboringcrypto.h"
-// #cgo LDFLAGS: -lcrypto
+// #cgo LDFLAGS: -ldl
 import "C"
 import (
 	"crypto/internal/boring/sig"
@@ -28,6 +28,10 @@ const (
 var enabled = false
 
 func init() {
+	// Check if we can `dlopen` OpenSSL
+	if C._goboringcrypto_DLOPEN_OPENSSL() == C.NULL {
+		return
+	}
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	// Check to see if the system is running in FIPS mode, if so
