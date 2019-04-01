@@ -54,11 +54,11 @@ func NewAESCipher(key []byte) (cipher.Block, error) {
 
 	switch len(c.key) * 8 {
 	case 128:
-		c.cipher = C.EVP_aes_128_ecb()
+		c.cipher = C._goboringcrypto_EVP_aes_128_ecb()
 	case 192:
-		c.cipher = C.EVP_aes_192_ecb()
+		c.cipher = C._goboringcrypto_EVP_aes_192_ecb()
 	case 256:
-		c.cipher = C.EVP_aes_256_ecb()
+		c.cipher = C._goboringcrypto_EVP_aes_256_ecb()
 	default:
 		return nil, errors.New("crypto/cipher: Invalid key size")
 	}
@@ -70,10 +70,10 @@ func NewAESCipher(key []byte) (cipher.Block, error) {
 
 func (c *aesCipher) finalize() {
 	if c.enc_ctx != nil {
-		C.EVP_CIPHER_CTX_free(c.enc_ctx)
+		C._goboringcrypto_EVP_CIPHER_CTX_free(c.enc_ctx)
 	}
 	if c.dec_ctx != nil {
-		C.EVP_CIPHER_CTX_free(c.dec_ctx)
+		C._goboringcrypto_EVP_CIPHER_CTX_free(c.dec_ctx)
 	}
 }
 
@@ -91,14 +91,14 @@ func (c *aesCipher) Encrypt(dst, src []byte) {
 	}
 
 	if c.enc_ctx == nil {
-		c.enc_ctx = C.EVP_CIPHER_CTX_new()
+		c.enc_ctx = C._goboringcrypto_EVP_CIPHER_CTX_new()
 		if c.enc_ctx == nil {
 			panic("cipher: unable to create EVP cipher ctx")
 		}
 
 		k := (*C.uchar)(unsafe.Pointer(&c.key[0]))
 
-		if C.int(1) != C.EVP_CipherInit_ex(c.enc_ctx, c.cipher, nil, k, nil, C.GO_AES_ENCRYPT) {
+		if C.int(1) != C._goboringcrypto_EVP_CipherInit_ex(c.enc_ctx, c.cipher, nil, k, nil, C.GO_AES_ENCRYPT) {
 			panic("cipher: unable to initialize EVP cipher ctx")
 		}
 	}
@@ -119,14 +119,14 @@ func (c *aesCipher) Decrypt(dst, src []byte) {
 		panic("crypto/aes: output not full block")
 	}
 	if c.dec_ctx == nil {
-		c.dec_ctx = C.EVP_CIPHER_CTX_new()
+		c.dec_ctx = C._goboringcrypto_EVP_CIPHER_CTX_new()
 		if c.dec_ctx == nil {
 			panic("cipher: unable to create EVP cipher ctx")
 		}
 
 		k := (*C.uchar)(unsafe.Pointer(&c.key[0]))
 
-		if C.int(1) != C.EVP_CipherInit_ex(c.dec_ctx, c.cipher, nil, k, nil, C.GO_AES_DECRYPT) {
+		if C.int(1) != C._goboringcrypto_EVP_CipherInit_ex(c.dec_ctx, c.cipher, nil, k, nil, C.GO_AES_DECRYPT) {
 			panic("cipher: unable to initialize EVP cipher ctx")
 		}
 	}
@@ -179,7 +179,7 @@ func (c *aesCipher) NewCBCEncrypter(iv []byte) cipher.BlockMode {
 	x := &aesCBC{key: c.key, mode: C.GO_AES_ENCRYPT}
 	copy(x.iv[:], iv)
 
-	x.ctx = C.EVP_CIPHER_CTX_new()
+	x.ctx = C._goboringcrypto_EVP_CIPHER_CTX_new()
 	if x.ctx == nil {
 		panic("cipher: unable to create EVP cipher ctx")
 	}
@@ -190,13 +190,13 @@ func (c *aesCipher) NewCBCEncrypter(iv []byte) cipher.BlockMode {
 	var cipher *C.EVP_CIPHER
 	switch len(c.key) * 8 {
 	case 128:
-		cipher = C.EVP_aes_128_cbc()
+		cipher = C._goboringcrypto_EVP_aes_128_cbc()
 	case 192:
-		cipher = C.EVP_aes_192_cbc()
+		cipher = C._goboringcrypto_EVP_aes_192_cbc()
 	case 256:
-		cipher = C.EVP_aes_256_cbc()
+		cipher = C._goboringcrypto_EVP_aes_256_cbc()
 	}
-	if C.int(1) != C.EVP_CipherInit_ex(x.ctx, cipher, nil, k, vec, x.mode) {
+	if C.int(1) != C._goboringcrypto_EVP_CipherInit_ex(x.ctx, cipher, nil, k, vec, x.mode) {
 		panic("cipher: unable to initialize EVP cipher ctx")
 	}
 
@@ -206,14 +206,14 @@ func (c *aesCipher) NewCBCEncrypter(iv []byte) cipher.BlockMode {
 }
 
 func (c *aesCBC) finalize() {
-	C.EVP_CIPHER_CTX_free(c.ctx)
+	C._goboringcrypto_EVP_CIPHER_CTX_free(c.ctx)
 }
 
 func (c *aesCipher) NewCBCDecrypter(iv []byte) cipher.BlockMode {
 	x := &aesCBC{key: c.key, mode: C.GO_AES_DECRYPT}
 	copy(x.iv[:], iv)
 
-	x.ctx = C.EVP_CIPHER_CTX_new()
+	x.ctx = C._goboringcrypto_EVP_CIPHER_CTX_new()
 	if x.ctx == nil {
 		panic("cipher: unable to create EVP cipher ctx")
 	}
@@ -224,13 +224,13 @@ func (c *aesCipher) NewCBCDecrypter(iv []byte) cipher.BlockMode {
 	var cipher *C.EVP_CIPHER
 	switch len(c.key) * 8 {
 	case 128:
-		cipher = C.EVP_aes_128_cbc()
+		cipher = C._goboringcrypto_EVP_aes_128_cbc()
 	case 192:
-		cipher = C.EVP_aes_192_cbc()
+		cipher = C._goboringcrypto_EVP_aes_192_cbc()
 	case 256:
-		cipher = C.EVP_aes_256_cbc()
+		cipher = C._goboringcrypto_EVP_aes_256_cbc()
 	}
-	if C.int(1) != C.EVP_CipherInit_ex(x.ctx, cipher, nil, k, vec, x.mode) {
+	if C.int(1) != C._goboringcrypto_EVP_CipherInit_ex(x.ctx, cipher, nil, k, vec, x.mode) {
 		panic("cipher: unable to initialize EVP cipher ctx")
 	}
 
@@ -268,7 +268,7 @@ func (c *aesCipher) NewCTR(iv []byte) cipher.Stream {
 	x := &aesCTR{key: c.key}
 	copy(x.iv[:], iv)
 
-	x.ctx = C.EVP_CIPHER_CTX_new()
+	x.ctx = C._goboringcrypto_EVP_CIPHER_CTX_new()
 	if x.ctx == nil {
 		panic("cipher: unable to create EVP cipher ctx")
 	}
@@ -278,15 +278,15 @@ func (c *aesCipher) NewCTR(iv []byte) cipher.Stream {
 
 	switch len(c.key) * 8 {
 	case 128:
-		if C.int(1) != C.EVP_EncryptInit_ex(x.ctx, C.EVP_aes_128_ctr(), nil, k, vec) {
+		if C.int(1) != C._goboringcrypto_EVP_EncryptInit_ex(x.ctx, C._goboringcrypto_EVP_aes_128_ctr(), nil, k, vec) {
 			panic("cipher: unable to initialize EVP cipher ctx")
 		}
 	case 192:
-		if C.int(1) != C.EVP_EncryptInit_ex(x.ctx, C.EVP_aes_192_ctr(), nil, k, vec) {
+		if C.int(1) != C._goboringcrypto_EVP_EncryptInit_ex(x.ctx, C._goboringcrypto_EVP_aes_192_ctr(), nil, k, vec) {
 			panic("cipher: unable to initialize EVP cipher ctx")
 		}
 	case 256:
-		if C.int(1) != C.EVP_EncryptInit_ex(x.ctx, C.EVP_aes_256_ctr(), nil, k, vec) {
+		if C.int(1) != C._goboringcrypto_EVP_EncryptInit_ex(x.ctx, C._goboringcrypto_EVP_aes_256_ctr(), nil, k, vec) {
 			panic("cipher: unable to initialize EVP cipher ctx")
 		}
 	}
@@ -297,7 +297,7 @@ func (c *aesCipher) NewCTR(iv []byte) cipher.Stream {
 }
 
 func (c *aesCTR) finalize() {
-	C.EVP_CIPHER_CTX_free(c.ctx)
+	C._goboringcrypto_EVP_CIPHER_CTX_free(c.ctx)
 }
 
 type aesGCM struct {
