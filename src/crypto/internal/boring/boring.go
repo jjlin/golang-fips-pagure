@@ -16,6 +16,7 @@ import "C"
 import (
 	"crypto/internal/boring/sig"
 	"math/big"
+	"os"
 	"runtime"
 )
 
@@ -51,7 +52,8 @@ func enableBoringFIPSMode() {
 }
 
 func fipsModeEnabled() bool {
-	return C._goboringcrypto_FIPS_mode() == fipsOn
+	return os.Getenv("GOLANG_FIPS") == "1" ||
+		C._goboringcrypto_FIPS_mode() == fipsOn
 }
 
 // Unreachable marks code that should be unreachable

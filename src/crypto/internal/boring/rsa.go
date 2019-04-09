@@ -250,6 +250,7 @@ func encrypt(ctx *C.GO_EVP_PKEY_CTX, out *C.uint8_t, outLen *C.size_t, in *C.uin
 }
 
 func SignRSAPSS(priv *PrivateKeyRSA, h crypto.Hash, hashed []byte, saltLen int) ([]byte, error) {
+	println("sign rsa pss")
 	md := cryptoHashToMD(h)
 	if md == nil {
 		return nil, errors.New("crypto/rsa: unsupported hash function")
@@ -259,7 +260,11 @@ func SignRSAPSS(priv *PrivateKeyRSA, h crypto.Hash, hashed []byte, saltLen int) 
 	}
 	out := make([]byte, C._goboringcrypto_RSA_size(priv.key))
 	var outLen C.size_t
-	if C._goboringcrypto_RSA_sign_pss_mgf1(priv.key, &outLen, base(out), C.size_t(len(out)), base(hashed), C.size_t(len(hashed)), md, nil, C.int(saltLen)) == 0 {
+	if C._goboringcrypto_RSA_sign_pss_mgf1(
+		priv.key,
+		&outLen, base(out), C.size_t(len(out)),
+		base(hashed), C.size_t(len(hashed)),
+		md, nil, C.int(saltLen)) == 0 {
 		return nil, fail("RSA_sign_pss_mgf1")
 	}
 	runtime.KeepAlive(priv)
@@ -268,6 +273,7 @@ func SignRSAPSS(priv *PrivateKeyRSA, h crypto.Hash, hashed []byte, saltLen int) 
 }
 
 func VerifyRSAPSS(pub *PublicKeyRSA, h crypto.Hash, hashed, sig []byte, saltLen int) error {
+	println("verify rsa pss")
 	md := cryptoHashToMD(h)
 	if md == nil {
 		return errors.New("crypto/rsa: unsupported hash function")
@@ -275,7 +281,10 @@ func VerifyRSAPSS(pub *PublicKeyRSA, h crypto.Hash, hashed, sig []byte, saltLen 
 	if saltLen == 0 {
 		saltLen = -2 // auto-recover
 	}
-	if C._goboringcrypto_RSA_verify_pss_mgf1(pub.key, base(hashed), C.size_t(len(hashed)), md, nil, C.int(saltLen), base(sig), C.size_t(len(sig))) == 0 {
+	if C._goboringcrypto_RSA_verify_pss_mgf1(pub.key,
+		base(hashed),
+		C.size_t(len(hashed)),
+		md, nil, C.int(saltLen), base(sig), C.size_t(len(sig))) == 0 {
 		return fail("RSA_verify_pss_mgf1")
 	}
 	runtime.KeepAlive(pub)
@@ -285,6 +294,7 @@ func VerifyRSAPSS(pub *PublicKeyRSA, h crypto.Hash, hashed, sig []byte, saltLen 
 func SignRSAPKCS1v15(priv *PrivateKeyRSA, h crypto.Hash, hashed []byte) ([]byte, error) {
 	out := make([]byte, C._goboringcrypto_RSA_size(priv.key))
 	if h == 0 {
+		println("sign raw pkcs")
 		// No hashing.
 		var outLen C.size_t
 		if C._goboringcrypto_RSA_sign_raw(priv.key, &outLen, base(out), C.size_t(len(out)), base(hashed), C.size_t(len(hashed)), C.GO_RSA_PKCS1_PADDING) == 0 {
@@ -293,6 +303,7 @@ func SignRSAPKCS1v15(priv *PrivateKeyRSA, h crypto.Hash, hashed []byte) ([]byte,
 		runtime.KeepAlive(priv)
 		return out[:outLen], nil
 	}
+	println("normal sign pkcs")
 
 	md := cryptoHashToMD(h)
 	if md == nil {
@@ -308,6 +319,7 @@ func SignRSAPKCS1v15(priv *PrivateKeyRSA, h crypto.Hash, hashed []byte) ([]byte,
 }
 
 func VerifyRSAPKCS1v15(pub *PublicKeyRSA, h crypto.Hash, hashed, sig []byte) error {
+	println("verify pkcs")
 	size := int(C._goboringcrypto_RSA_size(pub.key))
 	if len(sig) < size {
 		// BoringCrypto requires sig to be same size as RSA key, so pad with leading zeros.

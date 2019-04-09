@@ -157,7 +157,21 @@ func (x *aesCBC) CryptBlocks(dst, src []byte) {
 	}
 	if len(src) > 0 {
 		outlen := C.int(0)
-		if C._goboringcrypto_EVP_CipherUpdate(x.ctx, (*C.uchar)(unsafe.Pointer(&dst[0])), &outlen, (*C.uchar)(unsafe.Pointer(&src[0])), C.int(len(src))) != 1 {
+		if C._goboringcrypto_EVP_CipherInit_ex(
+			x.ctx,
+			nil, nil, nil,
+			(*C.uchar)(unsafe.Pointer(&x.iv[0])),
+			-1) != 1 {
+			panic("crypto/cipher: CipherInit_ex failed")
+		}
+		runtime.KeepAlive(x)
+		if C._goboringcrypto_EVP_CipherUpdate(
+			x.ctx,
+			base(dst), &outlen,
+			base(src), C.int(len(src)),
+		) != 1 {
+			//fmt.Printf("FAIL dst: %#v -- src: %#v -- len: %v outlen: %v\n", base(dst), base(src), len(src), outlen)
+			C._goboringcrypto_internal_ERR_print_errors_fp(C.stderr)
 			panic("crypto/cipher: CipherUpdate failed")
 		}
 		runtime.KeepAlive(x)
@@ -169,10 +183,6 @@ func (x *aesCBC) SetIV(iv []byte) {
 		panic("cipher: incorrect length IV")
 	}
 	copy(x.iv[:], iv)
-	if C._goboringcrypto_EVP_CipherInit_ex(x.ctx, nil, nil, nil, (*C.uchar)(unsafe.Pointer(&x.iv[0])), -1) != 1 {
-		panic("crypto/cipher: CipherInit_ex failed to set IV")
-	}
-	runtime.KeepAlive(x)
 }
 
 func (c *aesCipher) NewCBCEncrypter(iv []byte) cipher.BlockMode {
@@ -195,6 +205,8 @@ func (c *aesCipher) NewCBCEncrypter(iv []byte) cipher.BlockMode {
 		cipher = C._goboringcrypto_EVP_aes_192_cbc()
 	case 256:
 		cipher = C._goboringcrypto_EVP_aes_256_cbc()
+	default:
+		panic("crypto/boring: unsupported key length")
 	}
 	if C.int(1) != C._goboringcrypto_EVP_CipherInit_ex(x.ctx, cipher, nil, k, vec, x.mode) {
 		panic("cipher: unable to initialize EVP cipher ctx")
