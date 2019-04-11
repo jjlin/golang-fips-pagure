@@ -11,6 +11,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/internal/boring"
 	"fmt"
 	"internal/poll"
 	"internal/testenv"
@@ -466,6 +467,9 @@ func basefds() uintptr {
 		if strings.HasPrefix(arg, "-test.testlogfile=") {
 			n++
 		}
+	}
+	if boring.Enabled() {
+		n++ // Add 1 for dlopen'ed OpenSSL
 	}
 	return n
 }

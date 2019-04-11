@@ -220,13 +220,11 @@ var aesGCMTests = []struct {
 	},
 }
 
+const gcmStandardNonceSize = 12
+
 func TestAESGCM(t *testing.T) {
+outer:
 	for i, test := range aesGCMTests {
-		if boring.Enabled() {
-			if len(test.nonce) != 12 {
-				continue
-			}
-		}
 		key, _ := hex.DecodeString(test.key)
 		aes, err := aes.NewCipher(key)
 		if err != nil {
@@ -234,6 +232,12 @@ func TestAESGCM(t *testing.T) {
 		}
 
 		nonce, _ := hex.DecodeString(test.nonce)
+		if boring.Enabled() {
+			keyLen := len(key) * 8
+			if keyLen != 128 && keyLen != 256 {
+				continue
+			}
+		}
 		plaintext, _ := hex.DecodeString(test.plaintext)
 		ad, _ := hex.DecodeString(test.ad)
 		tagSize := (len(test.result) - len(test.plaintext)) / 2
@@ -242,6 +246,9 @@ func TestAESGCM(t *testing.T) {
 		switch {
 		// Handle non-standard nonce sizes
 		case tagSize != 16:
+			if boring.Enabled() {
+				break outer
+			}
 			aesgcm, err = cipher.NewGCMWithTagSize(aes, tagSize)
 			if err != nil {
 				t.Fatal(err)
@@ -249,6 +256,9 @@ func TestAESGCM(t *testing.T) {
 
 		// Handle non-standard tag sizes
 		case len(nonce) != 12:
+			if boring.Enabled() {
+				break outer
+			}
 			aesgcm, err = cipher.NewGCMWithNonceSize(aes, len(nonce))
 			if err != nil {
 				t.Fatal(err)
@@ -349,7 +359,7 @@ func TestTagFailureOverwrite(t *testing.T) {
 
 func TestGCMCounterWrap(t *testing.T) {
 	if boring.Enabled() {
-		t.Skip("skipping GCM counter wrap test in boring mode due to non-standard nonce size")
+		t.Skip("skipping GCM counter test in boring mode")
 	}
 	// Test that the last 32-bits of the counter wrap correctly.
 	tests := []struct {

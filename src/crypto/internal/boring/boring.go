@@ -14,6 +14,7 @@ package boring
 // #cgo LDFLAGS: -ldl
 import "C"
 import (
+	"crypto/internal/boring/fipstls"
 	"crypto/internal/boring/sig"
 	"math/big"
 	"os"
@@ -49,6 +50,7 @@ func enableBoringFIPSMode() {
 	if C._goboringcrypto_OPENSSL_thread_setup() != 1 {
 		panic("boringcrypto: OpenSSL thread setup failed")
 	}
+	fipstls.Force()
 }
 
 func fipsModeEnabled() bool {

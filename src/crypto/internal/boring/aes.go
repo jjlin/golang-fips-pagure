@@ -170,8 +170,6 @@ func (x *aesCBC) CryptBlocks(dst, src []byte) {
 			base(dst), &outlen,
 			base(src), C.int(len(src)),
 		) != 1 {
-			//fmt.Printf("FAIL dst: %#v -- src: %#v -- len: %v outlen: %v\n", base(dst), base(src), len(src), outlen)
-			C._goboringcrypto_internal_ERR_print_errors_fp(C.stderr)
 			panic("crypto/cipher: CipherUpdate failed")
 		}
 		runtime.KeepAlive(x)

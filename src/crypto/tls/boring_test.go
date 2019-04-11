@@ -7,6 +7,7 @@ package tls
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/internal/boring"
 	"crypto/internal/boring/fipstls"
 	"crypto/rand"
 	"crypto/rsa"
@@ -38,14 +39,16 @@ func TestBoringServerProtocolVersion(t *testing.T) {
 		})
 	}
 
-	test("VersionSSL30", VersionSSL30, "")
-	test("VersionTLS10", VersionTLS10, "")
-	test("VersionTLS11", VersionTLS11, "")
-	test("VersionTLS12", VersionTLS12, "")
-	test("VersionTLS13", VersionTLS13, "")
+	if !boring.Enabled() {
+		test("VersionSSL30", VersionSSL30, "")
+		test("VersionTLS10", VersionTLS10, "")
+		test("VersionTLS11", VersionTLS11, "")
+		test("VersionTLS12", VersionTLS12, "")
+		test("VersionTLS13", VersionTLS13, "")
 
-	fipstls.Force()
-	defer fipstls.Abandon()
+		fipstls.Force()
+		defer fipstls.Abandon()
+	}
 	test("VersionSSL30", VersionSSL30, "client offered only unsupported versions")
 	test("VersionTLS10", VersionTLS10, "client offered only unsupported versions")
 	test("VersionTLS11", VersionTLS11, "client offered only unsupported versions")
@@ -129,7 +132,9 @@ func TestBoringServerCipherSuites(t *testing.T) {
 				supportedPoints:    []uint8{pointFormatUncompressed},
 			}
 
-			testClientHello(t, serverConfig, clientHello)
+			if !boring.Enabled() {
+				testClientHello(t, serverConfig, clientHello)
+			}
 			t.Run("fipstls", func(t *testing.T) {
 				fipstls.Force()
 				defer fipstls.Abandon()
