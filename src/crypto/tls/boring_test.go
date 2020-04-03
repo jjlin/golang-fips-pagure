@@ -204,6 +204,7 @@ func TestBoringServerSignatureAndHash(t *testing.T) {
 
 	for _, sigHash := range defaultSupportedSignatureAlgorithms {
 		t.Run(fmt.Sprintf("%#x", sigHash), func(t *testing.T) {
+			boring.SetEnabled(false)
 			serverConfig := testConfig.Clone()
 			serverConfig.Certificates = make([]Certificate, 1)
 
@@ -238,6 +239,7 @@ func TestBoringServerSignatureAndHash(t *testing.T) {
 
 			// With fipstls forced, bad curves should be rejected.
 			t.Run("fipstls", func(t *testing.T) {
+				boring.SetEnabled(true)
 				fipstls.Force()
 				defer fipstls.Abandon()
 				clientErr, _ := boringHandshake(t, testConfig, serverConfig)
@@ -461,8 +463,10 @@ func TestBoringCertAlgs(t *testing.T) {
 				addRoot(r&1, R1)
 				addRoot(r&2, R2)
 				rootName = rootName[1:] // strip leading comma
+				boring.SetEnabled(false)
 				testServerCert(t, listName+"->"+rootName[1:], pool, leaf.key, list, shouldVerify)
 				testClientCert(t, listName+"->"+rootName[1:]+"(client cert)", pool, leaf.key, list, shouldVerify)
+				boring.SetEnabled(true)
 				fipstls.Force()
 				testServerCert(t, listName+"->"+rootName[1:]+" (fips)", pool, leaf.key, list, shouldVerifyFIPS)
 				testClientCert(t, listName+"->"+rootName[1:]+" (fips, client cert)", pool, leaf.key, list, shouldVerifyFIPS)

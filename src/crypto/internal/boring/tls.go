@@ -10,6 +10,7 @@ package boring
 import "C"
 import "unsafe"
 
+// TLSPRF is a wrapper around OpenSSL tls1_PRF.
 func TLSPRF(mode []byte, needsSHA384 bool, result, secret, crandom, srandom, seed []byte) {
 	var sha384 C.int
 	if needsSHA384 {

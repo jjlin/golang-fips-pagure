@@ -354,6 +354,9 @@ func (h finishedHash) hashForClientCertificate(sigType uint8, hashAlg crypto.Has
 	}
 
 	if h.version >= VersionTLS12 {
+		if needFIPS() {
+			return h.buffer, nil
+		}
 		hash := hashAlg.New()
 		hash.Write(h.buffer)
 		return hash.Sum(nil), nil

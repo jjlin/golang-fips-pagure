@@ -82,6 +82,13 @@ func (priv *PrivateKey) Public() crypto.PublicKey {
 // where the private part is kept in, for example, a hardware module. Common
 // uses should use the Sign function in this package directly.
 func (priv *PrivateKey) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
+	if _, ok := opts.(boring.SignerOpts); ok {
+		r, s, err := HashSign(rand, priv, digest, opts.HashFunc())
+		if err != nil {
+			return nil, err
+		}
+		return asn1.Marshal(ecdsaSignature{r, s})
+	}
 	r, s, err := Sign(rand, priv, digest)
 	if err != nil {
 		return nil, err

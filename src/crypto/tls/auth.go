@@ -98,8 +98,14 @@ func verifyHandshakeSignature(sigType uint8, pubkey crypto.PublicKey, hashFunc c
 		if ecdsaSig.R.Sign() <= 0 || ecdsaSig.S.Sign() <= 0 {
 			return errors.New("tls: ECDSA signature contained zero or negative values")
 		}
-		if !ecdsa.Verify(pubKey, signed, ecdsaSig.R, ecdsaSig.S) {
-			return errors.New("tls: ECDSA verification failure")
+		if needFIPS() {
+			if !ecdsa.HashVerify(pubKey, signed, ecdsaSig.R, ecdsaSig.S, hashFunc) {
+				return errors.New("tls: ECDSA verification failure")
+			}
+		} else {
+			if !ecdsa.Verify(pubKey, signed, ecdsaSig.R, ecdsaSig.S) {
+				return errors.New("tls: ECDSA verification failure")
+			}
 		}
 	case signatureEd25519:
 		pubKey, ok := pubkey.(ed25519.PublicKey)
@@ -114,8 +120,14 @@ func verifyHandshakeSignature(sigType uint8, pubkey crypto.PublicKey, hashFunc c
 		if !ok {
 			return errors.New("tls: RSA signing requires a RSA public key")
 		}
-		if err := rsa.VerifyPKCS1v15(pubKey, hashFunc, signed, sig); err != nil {
-			return err
+		if needFIPS() {
+			if err := rsa.HashVerifyPKCS1v15(pubKey, hashFunc, signed, sig); err != nil {
+				return err
+			}
+		} else {
+			if err := rsa.VerifyPKCS1v15(pubKey, hashFunc, signed, sig); err != nil {
+				return err
+			}
 		}
 	case signatureRSAPSS:
 		pubKey, ok := pubkey.(*rsa.PublicKey)
@@ -151,7 +163,7 @@ var signaturePadding = []byte{
 // signedMessage returns the pre-hashed (if necessary) message to be signed by
 // certificate keys in TLS 1.3. See RFC 8446, Section 4.4.3.
 func signedMessage(sigHash crypto.Hash, context string, transcript hash.Hash) []byte {
-	if sigHash == directSigning {
+	if sigHash == directSigning || needFIPS() {
 		b := &bytes.Buffer{}
 		b.Write(signaturePadding)
 		io.WriteString(b, context)

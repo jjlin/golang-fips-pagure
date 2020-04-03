@@ -33,8 +33,8 @@ var enabled = false
 
 // When this variable is true, the go crypto API will panic when a caller
 // tries to use the API in a non-compliant manner.  When this is false, the
-// go crytpo API will allow existing go crypto APIs to be used even
-// if they aren't FIPS compliant.  However, all the unerlying crypto operations
+// go crypto API will allow existing go crypto APIs to be used even
+// if they aren't FIPS compliant.  However, all the underlying crypto operations
 // will still be done by OpenSSL.
 var strictFIPS = false
 
@@ -106,6 +106,18 @@ func runtime_arg0() string
 
 func hasSuffix(s, t string) bool {
 	return len(s) > len(t) && s[len(s)-len(t):] == t
+}
+
+// SetEnabled allows setting of the internal
+// boolean to control whether we call into
+// OpenSSL or not.
+// Only callable from tests, will panic otherwise.
+func SetEnabled(val bool)  {
+	name := runtime_arg0()
+	if !hasSuffix(name, "_test") && !hasSuffix(name, ".test") {
+		panic("boringcrypto: invalid code execution")
+	}
+	enabled = val
 }
 
 // UnreachableExceptTests marks code that should be unreachable

@@ -121,6 +121,9 @@ func (priv *PrivateKey) Sign(rand io.Reader, digest []byte, opts crypto.SignerOp
 		return SignPSS(rand, priv, pssOpts.Hash, digest, pssOpts)
 	}
 
+	if _, ok := opts.(boring.SignerOpts); ok {
+		return HashSignPKCS1v15(rand, priv, opts.HashFunc(), digest)
+	}
 	return SignPKCS1v15(rand, priv, opts.HashFunc(), digest)
 }
 

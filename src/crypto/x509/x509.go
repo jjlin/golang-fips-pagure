@@ -16,6 +16,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
+	"crypto/internal/boring"
 	"crypto/rsa"
 	_ "crypto/sha1"
 	_ "crypto/sha256"
@@ -911,9 +912,11 @@ func checkSignature(algo SignatureAlgorithm, signed, signature []byte, publicKey
 		if !hashType.Available() {
 			return ErrUnsupportedAlgorithm
 		}
-		h := hashType.New()
-		h.Write(signed)
-		signed = h.Sum(nil)
+		if !boring.Enabled() {
+			h := hashType.New()
+			h.Write(signed)
+			signed = h.Sum(nil)
+		}
 	}
 
 	switch pub := publicKey.(type) {
@@ -924,7 +927,11 @@ func checkSignature(algo SignatureAlgorithm, signed, signature []byte, publicKey
 		if algo.isRSAPSS() {
 			return rsa.VerifyPSS(pub, hashType, signed, signature, &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash})
 		} else {
-			return rsa.VerifyPKCS1v15(pub, hashType, signed, signature)
+			if boring.Enabled() {
+				return rsa.HashVerifyPKCS1v15(pub, hashType, signed, signature)
+			} else {
+				return rsa.VerifyPKCS1v15(pub, hashType, signed, signature)
+			}
 		}
 	case *dsa.PublicKey:
 		if pubKeyAlgo != DSA {
@@ -956,8 +963,14 @@ func checkSignature(algo SignatureAlgorithm, signed, signature []byte, publicKey
 		if ecdsaSig.R.Sign() <= 0 || ecdsaSig.S.Sign() <= 0 {
 			return errors.New("x509: ECDSA signature contained zero or negative values")
 		}
-		if !ecdsa.Verify(pub, signed, ecdsaSig.R, ecdsaSig.S) {
-			return errors.New("x509: ECDSA verification failure")
+		if boring.Enabled() {
+			if !ecdsa.HashVerify(pub, signed, ecdsaSig.R, ecdsaSig.S, hashType) {
+				return errors.New("x509: ECDSA verification failure")
+			}
+		} else {
+			if !ecdsa.Verify(pub, signed, ecdsaSig.R, ecdsaSig.S) {
+				return errors.New("x509: ECDSA verification failure")
+			}
 		}
 		return
 	case ed25519.PublicKey:
@@ -2192,13 +2205,16 @@ func CreateCertificate(rand io.Reader, template, parent *Certificate, pub, priv 
 	c.Raw = tbsCertContents
 
 	signed := tbsCertContents
-	if hashFunc != 0 {
+	if hashFunc != 0 && !boring.Enabled() {
 		h := hashFunc.New()
 		h.Write(signed)
 		signed = h.Sum(nil)
 	}
 
 	var signerOpts crypto.SignerOpts = hashFunc
+	if boring.Enabled() {
+		signerOpts = boring.SignerOpts{SignerOpts: signerOpts}
+	}
 	if template.SignatureAlgorithm != 0 && template.SignatureAlgorithm.isRSAPSS() {
 		signerOpts = &rsa.PSSOptions{
 			SaltLength: rsa.PSSSaltLengthEqualsHash,

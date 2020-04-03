@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"crypto"
 	"crypto/hmac"
+	"crypto/internal/boring"
 	"crypto/rsa"
 	"errors"
 	"hash"
@@ -635,6 +636,9 @@ func (hs *serverHandshakeStateTLS13) sendServerCertificate() error {
 	signOpts := crypto.SignerOpts(sigHash)
 	if sigType == signatureRSAPSS {
 		signOpts = &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash, Hash: sigHash}
+	}
+	if needFIPS() {
+		signOpts = boring.SignerOpts{SignerOpts: signOpts}
 	}
 	sig, err := hs.cert.PrivateKey.(crypto.Signer).Sign(c.config.rand(), signed, signOpts)
 	if err != nil {

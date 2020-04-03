@@ -6,6 +6,7 @@
 
 package boring
 
+import "C"
 import (
 	"crypto"
 	"crypto/cipher"
@@ -25,11 +26,15 @@ func Unreachable() {
 	sig.StandardCrypto()
 }
 
+// SetEnabled allows tests to toggle boring crypto.
+// It is a no-op without BoringCrypto.
+func SetEnabled(bool)  {}
+
 // UnreachableExceptTests marks code that should be unreachable
 // when BoringCrypto is in use. It is a no-op without BoringCrypto.
 func UnreachableExceptTests() {}
 
-// This is a noop withotu BoringCrytpo.
+// This is a noop without BoringCrypto.
 func PanicIfStrictFIPS(v interface{}) {}
 
 type randReader int
@@ -108,5 +113,8 @@ func VerifyRSAPKCS1v15(pub *PublicKeyRSA, h crypto.Hash, hashed, sig []byte, msg
 	panic("boringcrypto: not available")
 }
 func VerifyRSAPSS(pub *PublicKeyRSA, h crypto.Hash, hashed, sig []byte, saltLen int) error {
+	panic("boringcrypto: not available")
+}
+func TLSPRF(mode []byte, needsSHA384 bool, result, secret, crandom, srandom, seed []byte) {
 	panic("boringcrypto: not available")
 }

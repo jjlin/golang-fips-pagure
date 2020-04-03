@@ -6,6 +6,7 @@ package tls
 
 import (
 	"crypto"
+	"crypto/internal/boring"
 	"crypto/md5"
 	"crypto/rsa"
 	"crypto/sha1"
@@ -108,7 +109,7 @@ func md5SHA1Hash(slices [][]byte) []byte {
 // the sigType (for earlier TLS versions). For Ed25519 signatures, which don't
 // do pre-hashing, it returns the concatenation of the slices.
 func hashForServerKeyExchange(sigType uint8, hashFunc crypto.Hash, version uint16, slices ...[]byte) []byte {
-	if sigType == signatureEd25519 {
+	if sigType == signatureEd25519 || needFIPS() {
 		var signed []byte
 		for _, slice := range slices {
 			signed = append(signed, slice...)
@@ -198,6 +199,9 @@ NextCandidate:
 	signOpts := crypto.SignerOpts(hashFunc)
 	if sigType == signatureRSAPSS {
 		signOpts = &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash, Hash: hashFunc}
+	}
+	if needFIPS() {
+		signOpts = boring.SignerOpts{SignerOpts: signOpts}
 	}
 	sig, err := priv.Sign(config.rand(), signed, signOpts)
 	if err != nil {

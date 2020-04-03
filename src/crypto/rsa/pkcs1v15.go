@@ -313,8 +313,25 @@ func SignPKCS1v15(random io.Reader, priv *PrivateKey, hash crypto.Hash, hashed [
 	return em, nil
 }
 
-// func HashSignPKCS1v15(random io.Reader, priv *PrivateKey, hash crypto.Hash, hashed []byte) ([]byte, error) {
-// }
+// HashSignPKCS1v15 will hash and sign the input in one operation via OpenSSL compliant with FIPS guidelines
+// if FIPS mode is enabled. Otherwise it falls back to the default which will hash and sign in separate
+// operations.
+func HashSignPKCS1v15(random io.Reader, priv *PrivateKey, h crypto.Hash, msg []byte) ([]byte, error) {
+	if boring.Enabled() {
+		bkey, err := boringPrivateKey(priv)
+		if err != nil {
+			return nil, err
+		}
+		return boring.SignRSAPKCS1v15(bkey, h, msg, false)
+	}
+	boring.UnreachableExceptTests()
+
+	hash := h.New()
+	hash.Write(msg)
+	d := hash.Sum(nil)
+
+	return SignPKCS1v15(random, priv, h, d)
+}
 
 // VerifyPKCS1v15 verifies an RSA PKCS#1 v1.5 signature.
 // hashed is the result of hashing the input message using the given hash
@@ -366,6 +383,8 @@ func VerifyPKCS1v15(pub *PublicKey, hash crypto.Hash, hashed []byte, sig []byte)
 	return nil
 }
 
+// HashVerifyPKCS1v15 will hash and verify in one operation when the system is in FIPS mode.
+// Otherwise it will hash then sign as normal.
 func HashVerifyPKCS1v15(pub *PublicKey, hash crypto.Hash, msg []byte, sig []byte) error {
 	if boring.Enabled() {
 		bkey, err := boringPublicKey(pub)
