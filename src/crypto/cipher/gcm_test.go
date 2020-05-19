@@ -239,7 +239,7 @@ outer:
 		}
 
 		nonce, _ := hex.DecodeString(test.nonce)
-		if boring.Enabled() {
+		if boring.Enabled {
 			keyLen := len(key) * 8
 			if keyLen != 128 && keyLen != 256 {
 				continue
@@ -253,7 +253,7 @@ outer:
 		switch {
 		// Handle non-standard tag sizes
 		case tagSize != 16:
-			if boring.Enabled() {
+			if boring.Enabled {
 				break outer
 			}
 			aesgcm, err = cipher.NewGCMWithTagSize(aes, tagSize)
@@ -271,7 +271,7 @@ outer:
 
 		// Handle non-standard nonce sizes
 		case len(nonce) != 12:
-			if boring.Enabled() {
+			if boring.Enabled {
 				break outer
 			}
 			aesgcm, err = cipher.NewGCMWithNonceSize(aes, len(nonce))
@@ -373,7 +373,7 @@ func TestTagFailureOverwrite(t *testing.T) {
 }
 
 func TestGCMCounterWrap(t *testing.T) {
-	if boring.Enabled() {
+	if boring.Enabled {
 		t.Skip("skipping GCM counter test in boring mode")
 	}
 	// Test that the last 32-bits of the counter wrap correctly.
@@ -428,7 +428,7 @@ func wrap(b cipher.Block) cipher.Block {
 }
 
 func TestGCMAsm(t *testing.T) {
-	if boring.Enabled() {
+	if boring.Enabled {
 		t.Skip("skipping test in boring mode")
 	}
 	// Create a new pair of AEADs, one using the assembly implementation

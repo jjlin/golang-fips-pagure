@@ -245,7 +245,7 @@ func TestOverlongMessagePKCS1v15(t *testing.T) {
 }
 
 func TestUnpaddedSignature(t *testing.T) {
-	if boring.Enabled() {
+	if boring.Enabled {
 		t.Skip("skipping in boring mode")
 	}
 	msg := []byte("Thu Dec 19 18:06:16 EST 2013\n")

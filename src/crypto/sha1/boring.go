@@ -17,7 +17,7 @@ import (
 )
 
 func boringEnabled() bool {
-	return boring.Enabled()
+	return boring.Enabled
 }
 
 func boringNewSHA1() hash.Hash { return boring.NewSHA1() }

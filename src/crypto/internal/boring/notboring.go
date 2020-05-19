@@ -14,8 +14,6 @@ import (
 	"math/big"
 )
 
-var enabled = false
-
 // Unreachable marks code that should be unreachable
 // when BoringCrypto is in use. It is a no-op without BoringCrypto.
 func Unreachable() {
@@ -29,7 +27,7 @@ func Unreachable() {
 // when BoringCrypto is in use. It is a no-op without BoringCrypto.
 func UnreachableExceptTests() {}
 
-// This is a noop withotu BoringCrytpo.
+// This is a noop without BoringCrytpo.
 func PanicIfStrictFIPS(v interface{}) {}
 
 type randReader int

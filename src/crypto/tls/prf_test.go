@@ -47,7 +47,7 @@ type testKeysFromTest struct {
 }
 
 func TestKeysFromPreMasterSecret(t *testing.T) {
-	if boring.Enabled() {
+	if boring.Enabled {
 		t.Skip("unsupprted TLS versions used for FIPS mode")
 	}
 	for i, test := range testKeysFromTests {

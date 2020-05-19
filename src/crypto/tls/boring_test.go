@@ -39,7 +39,7 @@ func TestBoringServerProtocolVersion(t *testing.T) {
 		})
 	}
 
-	if !boring.Enabled() {
+	if !boring.Enabled {
 		test("VersionTLS10", VersionTLS10, "")
 		test("VersionTLS11", VersionTLS11, "")
 		test("VersionTLS12", VersionTLS12, "")
@@ -131,7 +131,7 @@ func TestBoringServerCipherSuites(t *testing.T) {
 				supportedPoints:    []uint8{pointFormatUncompressed},
 			}
 
-			if !boring.Enabled() {
+			if !boring.Enabled {
 				testClientHello(t, serverConfig, clientHello)
 			}
 			t.Run("fipstls", func(t *testing.T) {

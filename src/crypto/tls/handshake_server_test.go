@@ -452,7 +452,7 @@ func testSCTHandshake(t *testing.T, version uint16) {
 }
 
 func TestCrossVersionResume(t *testing.T) {
-	if boring.Enabled() {
+	if boring.Enabled {
 		t.Skip("skip cross version resume test in FIPS mode")
 	}
 	t.Run("TLSv12", func(t *testing.T) { testCrossVersionResume(t, VersionTLS12) })
@@ -750,14 +750,14 @@ func runServerTestForVersion(t *testing.T, template *serverTest, version, option
 }
 
 func runServerTestTLS10(t *testing.T, template *serverTest) {
-	if boring.Enabled() {
+	if boring.Enabled {
 		t.Skip("boring enabled, TLS < 1.2 not supported")
 	}
 	runServerTestForVersion(t, template, "TLSv10", "-tls1")
 }
 
 func runServerTestTLS11(t *testing.T, template *serverTest) {
-	if boring.Enabled() {
+	if boring.Enabled {
 		t.Skip("boring enabled, TLS < 1.2 not supported")
 	}
 	runServerTestForVersion(t, template, "TLSv11", "-tls1_1")

@@ -121,7 +121,7 @@ func randFieldElement(c elliptic.Curve, rand io.Reader) (k *big.Int, err error) 
 
 // GenerateKey generates a public and private key pair.
 func GenerateKey(c elliptic.Curve, rand io.Reader) (*PrivateKey, error) {
-	if boring.Enabled() {
+	if boring.Enabled {
 		x, y, d, err := boring.GenerateKeyECDSA(c.Params().Name)
 		if err != nil {
 			return nil, err
@@ -183,7 +183,7 @@ var errZeroParam = errors.New("zero parameter")
 func Sign(rand io.Reader, priv *PrivateKey, hash []byte) (r, s *big.Int, err error) {
 	randutil.MaybeReadByte(rand)
 
-	if boring.Enabled() {
+	if boring.Enabled {
 		boring.PanicIfStrictFIPS("ecdsa.Sign disabled in FIPS mode, use HashSign with raw message instead")
 		b, err := boringPrivateKey(priv)
 		if err != nil {
@@ -269,7 +269,7 @@ func Sign(rand io.Reader, priv *PrivateKey, hash []byte) (r, s *big.Int, err err
 func HashSign(rand io.Reader, priv *PrivateKey, msg []byte, h crypto.Hash) (r, s *big.Int, err error) {
 	randutil.MaybeReadByte(rand)
 
-	if boring.Enabled() {
+	if boring.Enabled {
 		b, err := boringPrivateKey(priv)
 		if err != nil {
 			return nil, nil, err
@@ -288,7 +288,7 @@ func HashSign(rand io.Reader, priv *PrivateKey, msg []byte, h crypto.Hash) (r, s
 // Verify verifies the signature in r, s of hash using the public key, pub. Its
 // return value records whether the signature is valid.
 func Verify(pub *PublicKey, hash []byte, r, s *big.Int) bool {
-	if boring.Enabled() {
+	if boring.Enabled {
 		boring.PanicIfStrictFIPS("ecdsa.Verify disabled in FIPS mode, use HashVerify with raw message instead")
 		b, err := boringPublicKey(pub)
 		if err != nil {
@@ -339,7 +339,7 @@ func Verify(pub *PublicKey, hash []byte, r, s *big.Int) bool {
 }
 
 func HashVerify(pub *PublicKey, msg []byte, r, s *big.Int, h crypto.Hash) bool {
-	if boring.Enabled() {
+	if boring.Enabled {
 		b, err := boringPublicKey(pub)
 		if err != nil {
 			return false

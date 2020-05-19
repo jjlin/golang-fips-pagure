@@ -512,14 +512,14 @@ func runClientTestForVersion(t *testing.T, template *clientTest, version, option
 }
 
 func runClientTestTLS10(t *testing.T, template *clientTest) {
-	if boring.Enabled() {
+	if boring.Enabled {
 		t.Skip("boring enabled, TLS < 1.2 not supported")
 	}
 	runClientTestForVersion(t, template, "TLSv10", "-tls1")
 }
 
 func runClientTestTLS11(t *testing.T, template *clientTest) {
-	if boring.Enabled() {
+	if boring.Enabled {
 		t.Skip("boring enabled, TLS < 1.2 not supported")
 	}
 	runClientTestForVersion(t, template, "TLSv11", "-tls1_1")
@@ -1892,7 +1892,7 @@ func testGetClientCertificate(t *testing.T, version uint16) {
 		clientConfig.MaxVersion = version
 
 		test.setup(clientConfig, serverConfig)
-		if boring.Enabled() && clientConfig.MaxVersion == VersionTLS11 {
+		if boring.Enabled && clientConfig.MaxVersion == VersionTLS11 {
 			t.Skip("unsupported TLS version in FIPS mode")
 		}
 
