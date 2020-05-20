@@ -428,9 +428,6 @@ func wrap(b cipher.Block) cipher.Block {
 }
 
 func TestGCMAsm(t *testing.T) {
-	if boring.Enabled {
-		t.Skip("skipping test in boring mode")
-	}
 	// Create a new pair of AEADs, one using the assembly implementation
 	// and one using the generic Go implementation.
 	newAESGCM := func(key []byte) (asm, generic cipher.AEAD, err error) {
