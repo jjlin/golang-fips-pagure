@@ -8,7 +8,7 @@ import (
 // Previously would cause panic because of incorrect
 // stack allocation of opaque OpenSSL type.
 func TestNewHMAC(t *testing.T) {
-	if !Enabled() {
+	if !Enabled {
 		t.Skip("boringcrypto: skipping test, FIPS not enabled")
 	}
 	mac := NewHMAC(NewSHA256, nil)
