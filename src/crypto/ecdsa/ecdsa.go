@@ -121,15 +121,6 @@ func randFieldElement(c elliptic.Curve, rand io.Reader) (k *big.Int, err error) 
 
 // GenerateKey generates a public and private key pair.
 func GenerateKey(c elliptic.Curve, rand io.Reader) (*PrivateKey, error) {
-	if boring.Enabled {
-		x, y, d, err := boring.GenerateKeyECDSA(c.Params().Name)
-		if err != nil {
-			return nil, err
-		}
-		return &PrivateKey{PublicKey: PublicKey{Curve: c, X: x, Y: y}, D: d}, nil
-	}
-	boring.UnreachableExceptTests()
-
 	k, err := randFieldElement(c, rand)
 	if err != nil {
 		return nil, err

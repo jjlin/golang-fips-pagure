@@ -386,6 +386,38 @@ _goboringcrypto_EVP_PKEY_assign_EC_KEY(EVP_PKEY *pkey, GO_EC_KEY *eckey) {
 	return _goboringcrypto_internal_EVP_PKEY_assign(pkey, EVP_PKEY_EC, (char *)(eckey));
 }
 
+DEFINEFUNC(BN_CTX*, BN_CTX_new,
+	(),
+	())
+
+DEFINEFUNC(BN_CTX*, BN_CTX_free,
+	(BN_CTX *c),
+	(c))
+
+DEFINEFUNC(int, EVP_PKEY_derive,
+	(EVP_PKEY_CTX *ctx, unsigned char *key, size_t *keylen),
+	(ctx, key, keylen))
+
+DEFINEFUNC(int, EVP_PKEY_derive_init,
+	(EVP_PKEY_CTX *ctx),
+	(ctx))
+
+DEFINEFUNC(int, EC_POINT_oct2point,
+	(const EC_GROUP *group, EC_POINT *p, const unsigned char *buf, size_t len, BN_CTX *ctx),
+	(group, p, buf, len, ctx))
+
+DEFINEFUNC(int, EVP_PKEY_set1_EC_KEY,
+	(EVP_PKEY *pkey, EC_KEY *e),
+	(pkey, e))
+
+DEFINEFUNC(int, EVP_PKEY_derive_set_peer,
+	(EVP_PKEY_CTX *ctx, EVP_PKEY *peer),
+	(ctx, peer))
+
+DEFINEFUNC(EVP_PKEY*, EVP_PKEY_new_raw_private_key,
+	(int type, ENGINE *e, const unsigned char *key, size_t keylen),
+	(type, e, key, keylen))
+
 static inline int
 _goboringcrypto_EVP_PKEY_assign_RSA(EVP_PKEY *pkey, RSA *rsa) {
 	return _goboringcrypto_internal_EVP_PKEY_assign(pkey, EVP_PKEY_RSA, (char *)(rsa));
