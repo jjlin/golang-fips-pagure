@@ -7,6 +7,7 @@ package tls
 import (
 	"crypto/elliptic"
 	"crypto/hmac"
+	"crypto/internal/boring"
 	"errors"
 	"hash"
 	"io"
@@ -166,6 +167,15 @@ func (p *nistParameters) PublicKey() []byte {
 
 func (p *nistParameters) SharedKey(peerPublicKey []byte) []byte {
 	curve, _ := curveForCurveID(p.curveID)
+
+	if boring.Enabled {
+		shared, err := boring.GenerateSharedKey(curve.Params().Name, peerPublicKey, p.privateKey)
+		if err != nil {
+			return nil
+		}
+		return shared
+	}
+	boring.Unreachable()
 	// Unmarshal also checks whether the given point is on the curve.
 	x, y := elliptic.Unmarshal(curve, peerPublicKey)
 	if x == nil {

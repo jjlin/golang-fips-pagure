@@ -92,6 +92,15 @@ func (priv *PrivateKey) Public() crypto.PublicKey {
 // where the private part is kept in, for example, a hardware module. Common
 // uses should use the Sign function in this package directly.
 func (priv *PrivateKey) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
+	if boring.Enabled && rand == boring.RandReader {
+		b, err := boringPrivateKey(priv)
+		if err != nil {
+			return nil, err
+		}
+		return boring.SignMarshalECDSA(b, digest, opts.HashFunc())
+	}
+	boring.UnreachableExceptTests()
+
 	r, s, err := Sign(rand, priv, digest)
 	if err != nil {
 		return nil, err
@@ -121,15 +130,6 @@ func randFieldElement(c elliptic.Curve, rand io.Reader) (k *big.Int, err error) 
 
 // GenerateKey generates a public and private key pair.
 func GenerateKey(c elliptic.Curve, rand io.Reader) (*PrivateKey, error) {
-	if boring.Enabled {
-		x, y, d, err := boring.GenerateKeyECDSA(c.Params().Name)
-		if err != nil {
-			return nil, err
-		}
-		return &PrivateKey{PublicKey: PublicKey{Curve: c, X: x, Y: y}, D: d}, nil
-	}
-	boring.UnreachableExceptTests()
-
 	k, err := randFieldElement(c, rand)
 	if err != nil {
 		return nil, err

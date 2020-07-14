@@ -14,6 +14,7 @@ package elliptic
 // reverse the transform than to operate in affine coordinates.
 
 import (
+	"crypto/internal/boring"
 	"io"
 	"math/big"
 	"sync"
@@ -275,6 +276,15 @@ var mask = []byte{0xff, 0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f}
 // GenerateKey returns a public/private key pair. The private key is
 // generated using the given reader, which must return random data.
 func GenerateKey(curve Curve, rand io.Reader) (priv []byte, x, y *big.Int, err error) {
+	if boring.Enabled {
+		var eckey *boring.ECKey
+		eckey, err = boring.GenerateKeyEC(curve.Params().Name)
+		priv = eckey.D.Bytes()
+		x = eckey.X
+		y = eckey.Y
+		return
+	}
+	boring.Unreachable()
 	N := curve.Params().N
 	bitSize := N.BitLen()
 	byteLen := (bitSize + 7) >> 3

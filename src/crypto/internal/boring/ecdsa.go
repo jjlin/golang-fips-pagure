@@ -186,38 +186,3 @@ func VerifyECDSA(pub *PublicKeyECDSA, msg []byte, r, s *big.Int, h crypto.Hash) 
 	runtime.KeepAlive(pub)
 	return ok
 }
-
-func GenerateKeyECDSA(curve string) (X, Y, D *big.Int, err error) {
-	nid, err := curveNID(curve)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	key := C._goboringcrypto_EC_KEY_new_by_curve_name(nid)
-	if key == nil {
-		return nil, nil, nil, NewOpenSSLError("EC_KEY_new_by_curve_name failed")
-	}
-	defer C._goboringcrypto_EC_KEY_free(key)
-	if C._goboringcrypto_EC_KEY_generate_key(key) == 0 {
-		return nil, nil, nil, NewOpenSSLError("EC_KEY_generate_key failed")
-	}
-	group := C._goboringcrypto_EC_KEY_get0_group(key)
-	pt := C._goboringcrypto_EC_KEY_get0_public_key(key)
-	bd := C._goboringcrypto_EC_KEY_get0_private_key(key)
-	if pt == nil || bd == nil {
-		return nil, nil, nil, NewOpenSSLError("EC_KEY_get0_private_key failed")
-	}
-	bx := C._goboringcrypto_BN_new()
-	if bx == nil {
-		return nil, nil, nil, NewOpenSSLError("BN_new failed")
-	}
-	defer C._goboringcrypto_BN_free(bx)
-	by := C._goboringcrypto_BN_new()
-	if by == nil {
-		return nil, nil, nil, NewOpenSSLError("BN_new failed")
-	}
-	defer C._goboringcrypto_BN_free(by)
-	if C._goboringcrypto_EC_POINT_get_affine_coordinates_GFp(group, pt, bx, by, nil) == 0 {
-		return nil, nil, nil, NewOpenSSLError("EC_POINT_get_affine_coordinates_GFp failed")
-	}
-	return bnToBig(bx), bnToBig(by), bnToBig(bd), nil
-}
